@@ -169,6 +169,7 @@ flowchart LR
 ```
 
 - `items` は `{ myth, fact }` の配列。各項目に「誤解」「実際」のラベル文字が付く。
+- 文字列の中に Markdown のリンク（`[…](…)`）を書いても、リンクにならずそのまま表示される。また JSX で直接書いた `<a href="/…">` はベースパスが付かず、GitHub Pages（サブパス配信）でリンク切れになる。`myth` / `fact` の中ではリンクを使わず、「仮想記憶の記事で説明しています」のように書き、リンクは本文の Markdown 側に置く。
 
 ### 5.7 EffectiveAccessTimeSimulator
 

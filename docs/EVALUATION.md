@@ -61,6 +61,14 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | ci-cd / llm / ai-agent / raid | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | 独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。NIST AI 600-1・OWASP 2026 はオーケストレーターが原文で照合。人間による精読は省略 |
+| 2026-11-28 | llm | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | 1回目は major 1（RLHF の報酬モデル段階が欠落）。minor（節番号・√d_k の理由・grounding の扱い）を反映 |
+| 2026-11-28 | llm | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 9 |
+| 2026-11-28 | ai-agent | LLM（technical-reviewer、2回目） | 4 | 5 | 5 | 4 | 5 | 公開可 | 1回目は major 2（OWASP 2025 年版を断りなく使用、ハーネスの隔離の説明が過大）。2026 年版正本で再照合 |
+| 2026-11-28 | ai-agent | LLM（technical-reviewer、1回目） | 4 | 4 | 5 | 4 | 4 | 要修正 | major 2・minor 5 |
+| 2026-11-28 | ci-cd | LLM（technical-reviewer、2回目） | 5 | 4 | 5 | 5 | 4 | 公開可 | 1回目は major 2（Fowler にない表現、継続的デリバリーの自動化範囲）。minor 3 を反映 |
+| 2026-11-28 | ci-cd | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 5 | 4 | 要修正 | major 2・minor 9 |
+| 2026-11-28 | raid | LLM（technical-reviewer、1回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | minor 13（md 文書の対象レベル、RAID 1 の台数前提など）を反映。計算はレビュアーが手で再検算 |
 | 2026-11-28 | os-basics / process-and-thread / http-https / system-performance-availability | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | 独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。人間による精読は省略 |
 | 2026-11-28 | system-performance-availability | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | 1回目は major 1（処理時間をレスポンスタイムと呼んでいた）。全数値を再検算 |
 | 2026-11-28 | system-performance-availability | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 9 |
