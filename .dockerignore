@@ -25,6 +25,7 @@ coverage
 *.key
 .claude/settings.local.json
 .claude/.state
+.claude/worktrees
 
 # not needed in images
 Dockerfile
