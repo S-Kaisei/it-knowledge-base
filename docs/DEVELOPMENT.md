@@ -76,12 +76,23 @@ CHOKIDAR_USEPOLLING=true VITE_USE_POLLING=true docker compose up -d web
 GitHub Pages（`https://<user>.github.io/it-knowledge-base/`）向けはサブパスでビルドする。
 
 ```bash
-docker compose exec -e BASE_PATH=/it-knowledge-base/ web npm run build
-# preview イメージは ARG で渡す
-docker compose --profile preview build --build-arg BASE_PATH=/it-knowledge-base/ preview
+docker compose exec web npm run build:subpath        # → build-subpath/client（BASE_PATH=/it-knowledge-base/）
+# preview イメージをサブパスで作る場合
+BASE_PATH=/it-knowledge-base/ docker compose --profile preview up -d --build preview   # http://127.0.0.1:8080/it-knowledge-base/
 ```
 
-- 既定は `BASE_PATH=/`。ルート・サブパスの両方を E2E で検証する（[ARCHITECTURE.md](./ARCHITECTURE.md#4-base-pathphase-1-で実装予定)）。
+- 既定は `BASE_PATH=/`。`verify` はルート・サブパスの両方をビルドしてリンク検証し、E2E は fixture コンテンツでサブパス配信を検証する。
+- React Router はサブパス配下にページを出力するため、`postbuild` が成果物ルートへ移動する（ADR-0006）。
+
+## 6.1 下書き記事の表示確認・スクリーンショット
+
+下書き（`draft: true`）は本番ビルドに含まれない。開発サーバー（`dev`）では表示される。レビュー用の静的ビルドとスクリーンショットは次のとおり（**確認専用。CI・デプロイでは使えない**）。
+
+```bash
+docker compose run --rm qa sh -c "npm run build:drafts && node scripts/screenshots.mjs --dir build-drafts/client /fundamentals/cpu/"
+# → test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png
+#   Mermaid の描画エラーと横スクロールの発生も検出して報告する
+```
 
 ## 7. npm scripts
 
@@ -95,9 +106,14 @@ docker compose --profile preview build --build-arg BASE_PATH=/it-knowledge-base/
 | `content:generate` | `src/generated/content-index.json` を生成 |
 | `content:check` | frontmatter・slug・リンク・見出し・プレースホルダー・Mermaid・KaTeX の検証 |
 | `test` | Vitest（unit + components） |
-| `test:e2e` | Playwright |
-| `build` | content:generate → react-router build → postbuild → pagefind |
-| `links:check` | ビルド成果物の内部リンク検証（外部リンク障害は警告扱い） |
+| `test:e2e` | `build:e2e` → Playwright（site / fixture / mobile / subpath プロジェクト） |
+| `build` | content:generate → react-router build → postbuild → pagefind（`build/client`） |
+| `build:subpath` | GitHub Pages 用（`BASE_PATH=/it-knowledge-base/` → `build-subpath/client`） |
+| `build:e2e` | fixture コンテンツでルート・サブパスをビルド（E2E 用） |
+| `build:drafts` | 下書きを含む確認用ビルド（`build-drafts/client`、CI では禁止） |
+| `screenshots` | 静的ビルドのページをライト/ダーク × デスクトップ/モバイルで撮影 |
+| `serve` | GitHub Pages と同じ規則で静的ファイルを配信（E2E 用、本番サーバーではない） |
+| `links:check` / `links:check:subpath` | ビルド成果物の内部リンク・アンカー検証（`--external` で外部リンクを警告として確認） |
 | `verify` | 品質ゲート一式。`--quick` で typecheck + lint + content:check + test のみ |
 
 ## 8. verify の順序
@@ -111,9 +127,9 @@ docker compose --profile preview build --build-arg BASE_PATH=/it-knowledge-base/
 5. コンテンツ構造検証（`content:check`）
 6. ユニットテスト
 7. コンポーネントテスト
-8. 静的サイトビルド（`build`）
-9. 内部リンク検証（`links:check`）
-10. Playwright E2E（`test:e2e`）
+8. 静的サイトビルド（`build`）、8b. サブパスビルド（`build:subpath`）
+9. 内部リンク検証（`links:check`）、9b. サブパスのリンク検証
+10. Playwright E2E（`test:e2e`。fixture のビルドを含む）
 
 hooks・Docker・GitHub Actions は同じ `scripts/verify.mjs` を共有する。
 
@@ -124,7 +140,14 @@ hooks・Docker・GitHub Actions は同じ `scripts/verify.mjs` を共有する�
 | `port is already allocated`（5173 / 8080） | `lsof -i :5173` で占有プロセスを確認。別の compose プロジェクトや `npm run dev` が残っていないか |
 | ファイルを保存しても画面が更新されない | `docker compose logs -f web` でエラー確認 → 5 章の polling を試す |
 | `Cannot find module` / 依存が古い | 4 章の `docker compose run --rm web npm ci` |
-| 生成ファイルの所有者が root になる | コンテナを非 root ユーザーで実行する設定か確認（Phase 1 で確定）。`sudo chown` で戻す前に原因を確認 |
+| 生成ファイルの所有者が root になる | web / qa は `node` ユーザー（uid 1000）で動く。Linux ホストで uid が異なる場合は所有者が 1000 になる点に注意 |
 | `Cannot connect to the Docker daemon` | Docker Desktop / dockerd が起動しているか確認。Claude Code の検証はこの場合「未検証」と報告される |
 | 検索が動かない（開発サーバー） | 仕様。検索インデックスはビルド後のみ生成される。`preview` で確認する |
 | 存在しない URL がトップに飛ぶ | nginx 設定の誤り。SPA フォールバックではなく `404.html` を返す設定か確認 |
+
+## 10. CI / デプロイ
+
+- `.github/workflows/ci.yml`：PR と `main` への push で `npm run verify`（Node は `.node-version`）、Playwright レポート保存、Docker（dev / production）のビルドと nginx コンテナのスモークテスト。`main` では検証済みのサブパスビルドを `site` アーティファクトとして保存する。
+- `.github/workflows/deploy.yml`：CI 成功後、**検証済みアーティファクトをそのまま** GitHub Pages へ公開する。リポジトリ変数 `PAGES_DEPLOY_ENABLED=true` を設定するまで動かない。
+- 初回公開の手順（所有者の承認が必要）：Settings → Pages → Source を「GitHub Actions」にする → Settings → Variables に `PAGES_DEPLOY_ENABLED=true` → `main` へ push。
+- Action はコミット SHA で固定している。更新時は SHA とコメントのバージョンを合わせて変更する。
