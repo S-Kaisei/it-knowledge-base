@@ -15,6 +15,14 @@ describe('content:check（fixture）', () => {
     expect(stats.published).toBeGreaterThan(0);
   }, 60_000);
 
+  it('未登録の MDX コンポーネントを検出する（実行時エラーになる前に止める）', async () => {
+    const { errors } = await check('invalid/unknown-component');
+    const unknown = errors.filter((e) => e.message.startsWith('未登録の MDX コンポーネント'));
+    expect(unknown).toHaveLength(1);
+    expect(unknown[0]).toMatchObject({ file: 'fundamentals/unknown-component.mdx', line: 22 });
+    expect(unknown[0]?.message).toContain('<NotRegisteredWidget>');
+  }, 60_000);
+
   it('Mermaid の構文エラーをファイルと行番号つきで検出する', async () => {
     const { errors } = await check('invalid/bad-mermaid');
     const mermaid = errors.filter((e) => e.message.startsWith('Mermaid の構文エラー'));

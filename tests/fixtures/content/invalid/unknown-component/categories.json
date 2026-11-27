@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "fundamentals",
+    "name": "IT基礎",
+    "nameEn": "Fundamentals",
+    "description": "コンピュータを構成するハードウェアとソフトウェア、性能の考え方を学びます。",
+    "topics": "CPU・メモリ・OS・性能",
+    "icon": "cpu",
+    "order": 1
+  },
+  {
+    "slug": "network",
+    "name": "ネットワーク",
+    "nameEn": "Network",
+    "description": "データがネットワークを通じて届く仕組みを、階層モデルとプロトコルから理解します。",
+    "topics": "TCP/IP・DNS・HTTP",
+    "icon": "globe",
+    "order": 3
+  },
+  {
+    "slug": "security",
+    "name": "セキュリティ",
+    "nameEn": "Security",
+    "description": "情報を守るための考え方と、認証・暗号・通信保護の仕組みを学びます。",
+    "topics": "認証・暗号・TLS",
+    "icon": "shield",
+    "order": 4
+  }
+]

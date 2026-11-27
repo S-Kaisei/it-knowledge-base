@@ -80,7 +80,7 @@ Zod スキーマ（`src/lib/content-schema.ts`）で検証する。
 | `Misconceptions` | `<Misconceptions items={[{ myth: '…', fact: '…' }]} />` | 「誤解 / 実際」ラベル付きのよくある誤解 |
 | 表 | GFM の表 | 横スクロール可能なラッパーで囲まれる |
 | 見出しアンカー | `##` / `###` | 見出しの横に「#」リンク（`この見出しへのリンク`）が自動で付く |
-| シミュレーター | `<CacheHitSimulator />` など | 未実装。必要性が明確な場合のみ追加する（SPEC §10） |
+| `EffectiveAccessTimeSimulator` | `<EffectiveAccessTimeSimulator />` | 実効アクセス時間（キャッシュ）のシミュレーター（5.7）。その他のシミュレーターは必要性が明確な場合のみ追加する（SPEC §10） |
 
 「関連記事」「参考資料・出典」は frontmatter（`related` / `prerequisites` / `references`）から記事末尾に自動表示される。本文に同じ節を書かない。
 
@@ -159,6 +159,24 @@ flowchart LR
 ```
 
 - `items` は `{ myth, fact }` の配列。各項目に「誤解」「実際」のラベル文字が付く。
+
+### 5.7 EffectiveAccessTimeSimulator
+
+```mdx
+<EffectiveAccessTimeSimulator />
+
+<EffectiveAccessTimeSimulator defaultHitRate={0.95} defaultCacheNs={5} defaultMemoryNs={60} />
+```
+
+| props | 型 | 既定 | 説明 |
+| --- | --- | --- | --- |
+| `defaultHitRate` | number（0〜1） | `0.9` | ヒット率 h の初期値。スライダーは 50〜100%（1% 刻み） |
+| `defaultCacheNs` | number | `10` | キャッシュのアクセス時間 Tc の初期値（ns）。スライダーは 1〜30 ns |
+| `defaultMemoryNs` | number | `100` | メインメモリのアクセス時間 Tm の初期値（ns）。スライダーは 40〜200 ns（10 ns 刻み） |
+
+- 実効アクセス時間を IPA の式 `h×Tc + (1−h)×Tm` で計算し、数値を埋めた式・メモリだけの場合との倍率・割合の棒を表示する。比較用に「参考: ミスペナルティ方式（Tc + (1−h)×Tm）」の結果も小さく表示する。
+- 範囲外の初期値はスライダーの範囲・刻みに丸められる。計算はページ内だけで行い、保存・送信はしない。事前レンダリング時は初期値の結果が HTML に含まれる。
+- 計算ロジックは `src/lib/simulators/effective-access-time.ts`。本文でも式と計算例を文章で説明する（シミュレーターだけに依存しない）。
 
 ## 6. 評価ルーブリック（SPEC §17）
 

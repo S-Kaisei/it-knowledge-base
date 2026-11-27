@@ -9,6 +9,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { visit } from 'unist-util-visit';
+import { MDX_COMPONENT_NAMES } from '../../src/components/article/mdx-component-names.ts';
 import { PROJECT_ROOT, articlePath, buildContentIndex, contentDir, loadCategories, readArticles } from './content.mjs';
 
 /**
@@ -244,6 +245,12 @@ export async function validateContent({ dir = contentDir(), publicDir = path.joi
         prevLevel = level;
       }
       if (PLACEHOLDER_RE.test(text)) problem(`未完成のプレースホルダーがあります: ${text.trim().slice(0, 60)}`, line);
+      // Capitalised JSX tags must be registered MDX components (an unknown one only fails at runtime).
+      for (const m of text.replace(/`[^`]*`/g, '').matchAll(/<([A-Z][A-Za-z0-9]*)[\s/>]/g)) {
+        if (!MDX_COMPONENT_NAMES.includes(m[1])) {
+          errors.push({ file, line, message: `未登録の MDX コンポーネント <${m[1]}> が使われています（使用可能: ${MDX_COMPONENT_NAMES.join(', ')}）` });
+        }
+      }
     }
 
     // Mermaid syntax (drafts included: a broken diagram is a build-quality problem, not a content one).

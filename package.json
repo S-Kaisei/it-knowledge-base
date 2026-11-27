@@ -22,9 +22,11 @@
     "build": "npm run content:generate && react-router build && node scripts/postbuild.mjs && pagefind --site ${BUILD_DIR:-build}/client",
     "build:subpath": "BASE_PATH=/it-knowledge-base/ BUILD_DIR=build-subpath npm run build",
     "build:e2e": "CONTENT_DIR=tests/fixtures/content/valid BUILD_DIR=build-e2e npm run build && CONTENT_DIR=tests/fixtures/content/valid BASE_PATH=/it-knowledge-base/ BUILD_DIR=build-e2e-subpath npm run build",
+    "build:drafts": "INCLUDE_DRAFTS=true ALLOW_DRAFT_BUILD=true BUILD_DIR=build-drafts npm run build",
     "links:check": "node scripts/check-links.mjs",
     "links:check:subpath": "BASE_PATH=/it-knowledge-base/ BUILD_DIR=build-subpath node scripts/check-links.mjs",
     "serve": "node scripts/serve-static.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {

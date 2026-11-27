@@ -17,7 +17,11 @@ const fail = (msg) => {
 if (!fs.existsSync(client)) fail(`${client} がありません。react-router build を先に実行してください`);
 
 const index = JSON.parse(fs.readFileSync(contentIndexFile(), 'utf8'));
-if (index.includeDrafts) fail('下書きを含むコンテンツインデックスで本番ビルドされています（content:generate を --drafts なしで実行してください）');
+// Draft builds are allowed only for local visual review (npm run build:drafts → build-drafts/). Never in CI/deploy.
+if (index.includeDrafts && process.env.ALLOW_DRAFT_BUILD !== 'true') {
+  fail('下書きを含むコンテンツインデックスで本番ビルドされています（content:generate を --drafts なしで実行してください）');
+}
+if (index.includeDrafts && process.env.CI === 'true' && process.env.GITHUB_ACTIONS === 'true') fail('CI では下書き入りビルドを作成できません');
 
 // With a basename, React Router writes pre-rendered pages under <client>/<basename>/ while assets stay at
 // <client>/assets. The deployed artifact root IS the base path (GitHub Pages serves it at /<repo>/),

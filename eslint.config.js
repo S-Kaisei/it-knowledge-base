@@ -11,6 +11,7 @@ export default tseslint.config(
       'build-subpath/',
       'build-e2e/',
       'build-e2e-subpath/',
+      'build-drafts/',
       '.react-router/',
       'src/generated/',
       'node_modules/',
