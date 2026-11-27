@@ -37,3 +37,13 @@
 
 - `routes.ts` が生成物に依存するため、`content:generate` を `dev` / `build` / `typecheck` の前に実行する必要がある。
 - draft はこの段階で除外されるため、本番ビルドで draft の URL は存在しない。
+
+## 追記（2026-11-28）
+
+実装との差分（「MDX ファイルをルートモジュールにする」という決定は変更なし）：
+
+- `src/routes.ts` は content index（JSON）ではなく、`scripts/lib/content.mjs` の `listArticles()` でコンテンツディレクトリを直接読む（frontmatter のみ、MDX はコンパイルしない）。ルート id は `article:<slug>` ではなく `article/<slug>`。
+- カテゴリページも `categories.json` から **カテゴリごとの静的ルート**（id `category/<slug>`、モジュールは共通の `routes/category.tsx`）として生成する。動的な `:category` ルートは未知の URL にもマッチし、404.html のハイドレーションで不整合を起こすため採用しない（[ADR 0006](./0006-github-pages-subpath-and-404.md) の追記）。
+- 目次は github-slugger で別途計算せず、本番と同じ MDX パイプライン（`scripts/lib/mdx-options.mjs`）でコンパイルした最終 HAST から rehype-slug の id を取り出す。
+- content index はアプリの表示（メタデータ・目次・前後記事）用で、`dev` / `build` / `typecheck` の前に `content:generate` で生成する。`CONTENT_DIR` 指定時は別ファイル（`content-index.<dir>.json`）に出力し、Vite のエイリアスで切り替える。
+- 記事で使える独自コンポーネントは `mdx-component-names.ts` に一覧化し、`content:check` が未登録の JSX タグをエラーにする。

@@ -43,3 +43,9 @@
 - 結果タイトルは記事 h1 の `data-pagefind-meta="title"`、カテゴリは `data-pagefind-meta="category:…"` を使う。
 - 抜粋は Pagefind が文字参照をエンコード済みだが、UI では `<mark>` 以外をすべてテキストとして描画する（`dangerouslySetInnerHTML` を使わない）。
 - 既知の制約：Mermaid のフォールバック表示（ソースコード）が本文として索引されるため、抜粋に `flowchart LR …` が出ることがある。記事レンダリング側で `data-pagefind-ignore` を付けることを検討する。複数語の日本語クエリは助詞（「の」「を」等）にもヒットし得る。
+
+## 追記（2026-11-28）
+
+- 上記「既知の制約」の Mermaid ソースの索引は解消済み：`Mermaid` コンポーネントの `<figure>` に `data-pagefind-ignore` を付けた（シミュレーター・見出しアンカーも同様）。
+- 複数語の日本語クエリが助詞等にもヒットする件は未解消（[EVALUATION.md](../EVALUATION.md) §5）。
+- 検索の E2E（S4）は fixture コンテンツでルート・サブパスともに成功している。

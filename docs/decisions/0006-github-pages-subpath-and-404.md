@@ -35,3 +35,12 @@
 - ルート配信とサブパス配信の両方を E2E で検証する必要がある。
 - 内部リンクで base path を手書きしない（`<Link>` を使う）。
 - サブパスの 404.html 内アセット URL は base path 付きの絶対パスである必要がある。
+
+## 追記（2026-11-28）
+
+実装との差分（決定内容は変更なし）：
+
+- `/404` は catch-all `*` ルート（id `catch-all`）を通して prerender する。静的ホストが任意の未知 URL に対して 404.html を返しても、ブラウザ側で同じ catch-all ルートにマッチするため、ハイドレーションの不整合が起きない。このためカテゴリも動的 `:category` ではなく静的ルートにした。
+- postbuild は `404/index.html` を `404.html` にコピーしたあと `404/` ディレクトリを削除する（`/404/` が 200 を返さないように）。
+- basename 付きビルドでは React Router がページを `<client>/<basename>/` 配下に出力するため、postbuild が成果物ルートへ移動する（ルートの `index.html` は `__spa-fallback.html` に改名）。あわせて `.nojekyll` を出力する。
+- nginx は `error_page 404 <BASE_PATH>404.html`（`__BASE_PATH__` をイメージビルド時に置換）。

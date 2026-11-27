@@ -19,17 +19,20 @@ maxTurns: 30
 
 - 読んでよい: リポジトリ全体、取得したスクリーンショット（PNG を Read で表示）。
 - 実行してよいコマンド（これ以外は禁止）:
+  - 標準: `docker compose run --rm qa npm run screenshots:drafts -- <path> [<path> ...]`（下書きを含む静的ビルドを撮影。出力は `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png`）
+  - 公開記事のみでよい場合: `docker compose run --rm qa sh -c "npm run build && node scripts/screenshots.mjs <path> ..."`
   - `docker compose run --rm qa npm run test:e2e`（引数でスペックや `--grep` を絞り込むのは可）
   - `docker compose run --rm qa npx playwright test <tests/e2e 配下のspec> [--project <name>] [--grep <pattern>]`
   - `ls` / `find` による成果物（`test-results/`、`playwright-report/` 等、`playwright.config.ts` の outputDir）の一覧取得
+  - ビルドは `build-drafts/` 等の生成物を作るが、ソースファイルは変更しない。
 - 編集してはいけない: すべてのファイル。
 
 ## 手順
 
 1. 依頼内容（対象ページ・観点）と `docs/DESIGN_SYSTEM.md`、`.claude/rules/design.md` を読む。
-2. `package.json` の `test:e2e` と `playwright.config.ts`、スクリーンショットを撮る spec の有無を確認する。なければ「未整備」と報告して終了する。
-3. 上記コマンドでスクリーンショットを取得する。Docker が使えなければ「未検証」と報告する。
-4. 各 PNG を Read で表示し、デスクトップ / タブレット / モバイル × ライト / ダークで確認する:
+2. 対象ページのパス（`/<category>/<slug>/` 等）を決める。
+3. 上記の標準コマンドでスクリーンショットを取得する。スクリプトが出力する問題（HTTP エラー、pageerror、Mermaid エラー、横スクロール）も記録する。Docker が使えなければ「未検証」と報告する。
+4. 各 PNG を Read で表示し、デスクトップ（1440×900）/ モバイル（Pixel 7）× ライト / ダークで確認する（タブレット幅は撮影対象外。必要なら「未確認」と記載）:
    - 横スクロール、要素の重なり・切れ、本文幅、余白
    - コントラスト、色だけに依存した表現、フォーカス表示
    - Mermaid / SVG / KaTeX / コードブロックの描画、ダークモードでの視認性

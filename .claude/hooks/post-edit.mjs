@@ -8,7 +8,8 @@ import { emitJson, isInside, isMain, projectDir, readHookInput, run } from './li
 
 const ARTICLE_RE = /^src\/content\/([^/]+)\/([^/]+)\.mdx?$/;
 const REQUIRED_KEYS = ['title', 'description', 'slug', 'category', 'difficulty', 'draft', 'lastUpdated'];
-const PLACEHOLDER_RE = /\b(TODO|FIXME|TBD|XXX)\b|lorem ipsum|ここに(本文|説明)を|（要確認）|\(要確認\)/i;
+// Keep in sync with PLACEHOLDER_RE in scripts/lib/validate.mjs (content:check).
+const PLACEHOLDER_RE = /\b(TODO|FIXME|TBD|XXX)\b|lorem ipsum|ここに(本文|説明|図)を|（要確認）|\(要確認\)/i;
 
 /** Split markdown into lines, marking which lines are inside fenced code blocks. Returns {lines, fenceOpen}. */
 function scanFences(text) {

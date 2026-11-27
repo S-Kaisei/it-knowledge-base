@@ -43,3 +43,12 @@ Stop hook は `stop_hook_active` と `.claude/.state/` の独自試行カウン�
 - hooks / permissions はセキュリティ境界ではない（サブプロセス経由の操作には効かない）ことを [HARNESS.md](../HARNESS.md) に明記する。
 - hooks はホストの Node.js で動作するため、依存パッケージを持たない。
 - 動作確認は単体テストに加え、実際の Claude Code セッションでのイベント発火で行う（[EVALUATION.md](../EVALUATION.md)）。
+
+## 追記（2026-11-28）
+
+実装との差分（層構成の決定は変更なし）：
+
+- 手動起動のみの Skill は `release` と `verify-site` の 2 つ（`disable-model-invocation: true`）。
+- Stop hook は `stop_hook_active` だけで再ブロックを抑止するのではなく、「前回失敗時から変更なし」の場合に抑止する。上限は既定 3 回。Docker 不可時は一度だけ block して「未検証」の明記を求める。入力の `background_tasks` に実行中のタスクがある間はゲートを保留する（サブエージェントの作業途中を検証しない）。
+- PreToolUse は Bash に加えて Read / Edit / Write / NotebookEdit にも適用し、秘密ファイルの参照とプロジェクト外への書き込みを判定する。
+- H1〜H15 の評価はすべて成功（[EVALUATION.md](../EVALUATION.md)）。

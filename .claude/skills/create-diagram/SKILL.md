@@ -29,7 +29,8 @@ argument-hint: "<記事パス or slug> <図にしたい内容>"
 
 ### Mermaid
 
-- 描画はクライアント側のみ（prerender 中に描画しない）。構文は `content:check` で検証される。
+- 描画はクライアント側のみ（prerender 中に描画しない）。構文は `content:check` で検証される（パーサーのみ。描画時の失敗は `data-mermaid-error` としてスクリーンショット・E2E で検出）。
+- 図の説明用の名前は `accTitle: …` で付ける（アクセシブルネームになる）。
 - ラベルは短く。ノード数が多すぎる場合は図を分割する。
 - テーマ色を図内で直接指定しない（サイトのテーマ設定に任せる）。
 
@@ -44,11 +45,12 @@ argument-hint: "<記事パス or slug> <図にしたい内容>"
 
 - 状態はページ内で完結（保存・送信しない）。ブラウザ専用APIは `useEffect` 内のみ。
 - 計算ロジックは純粋関数にし `tests/unit/` にテストを書く。キーボード操作可能なフォーム部品を使う。
+- 記事から使うには `src/components/article/mdx-component-names.ts` と `mdx-components.tsx` の両方に登録する（未登録だと `content:check` がエラー）。
 
 ## 4. 確認
 
 1. `docker compose exec web npm run content:check`（script が無ければ「未整備」）。
-2. 実際の描画を `visual-reviewer` サブエージェント（Playwright スクリーンショット、ライト / ダーク / モバイル幅）で確認する。Docker 不可なら「未検証」と報告する。
+2. 実際の描画を確認する（下書き記事も対象）。標準の手順は `docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/` で `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png` を撮り、PNG を確認する（`visual-reviewer` サブエージェントに依頼してよい）。スクリプトが報告する Mermaid エラー・横スクロールは修正する。Docker 不可なら「未検証」と報告する。
 3. React 図解を追加した場合は `docker compose run --rm qa npm run verify -- --quick`。
 
 ## 報告

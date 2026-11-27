@@ -1,6 +1,6 @@
 # 評価記録
 
-> ハーネスとコンテンツの評価計画と結果。**現時点ですべて未実施**。実行していない検証を成功と記録しない。
+> ハーネスとコンテンツの評価計画と結果。ハーネス評価 H1〜H15 はすべて成功（2026-11-28）。実行していない検証を成功と記録しない。
 
 状態の凡例：`未実施` / `成功` / `失敗` / `未検証`（環境制約で実行不可。理由を備考に書く）
 
@@ -30,12 +30,12 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | # | 検証項目 | 方法 | テスト場所 | 状態 |
 | --- | --- | --- | --- | --- |
-| S1 | `npm run verify` 全ステップ成功 | `docker compose run --rm qa npm run verify` | `scripts/verify.mjs` | 未実施 |
-| S2 | ルート配信の E2E | `BASE_PATH=/` ビルドで Playwright | `tests/e2e/` | 未実施 |
-| S3 | サブパス配信の E2E | `BASE_PATH=/it-knowledge-base/` ビルドで Playwright | `tests/e2e/` | 未実施 |
-| S4 | 日本語全文検索 | 実際の日本語クエリ（例：「キャッシュ」）で結果と URL を確認 | `tests/e2e/` | 未実施 |
-| S5 | 404 応答 | 存在しない URL で 404 ステータスと 404 ページ（preview / nginx） | `tests/e2e/` | 未実施 |
-| S6 | 本番イメージのビルド | `docker compose --profile preview up -d --build preview` | 手動 / CI | 未実施 |
+| S1 | `npm run verify` 全ステップ成功 | `docker compose run --rm qa npm run verify` | `scripts/verify.mjs` | 成功（2026-11-28、3 章の記録） |
+| S2 | ルート配信の E2E | `BASE_PATH=/` ビルドで Playwright | `tests/e2e/` | 成功（verify 内の `site` / `fixture` / `mobile` プロジェクト） |
+| S3 | サブパス配信の E2E | `BASE_PATH=/it-knowledge-base/` ビルドで Playwright | `tests/e2e/` | 成功（verify 内の `subpath` プロジェクト） |
+| S4 | 日本語全文検索 | 実際の日本語クエリ（例：「キャッシュ」）で結果と URL を確認 | `tests/e2e/` | 成功（`search.spec.ts` / `search-subpath.spec.ts`、fixture コンテンツ） |
+| S5 | 404 応答 | 存在しない URL で 404 ステータスと 404 ページ（preview / nginx） | `tests/e2e/` | 成功（静的サーバーでの E2E）。nginx は CI のスモークテストで確認する構成（CI 未実行） |
+| S6 | 本番イメージのビルド | `docker compose --profile preview up -d --build preview` | 手動 / CI | 成功（2026-11-28: `docker compose --profile preview up -d --build preview` → `/`・`/fundamentals/` が 200、`/no-such-page/` が 404、nginx は uid 101（非 root）、Node.js なし。CI の docker ジョブは GitHub 上で未実行） |
 | S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/contrast.test.ts` | 実施済み（2026-11-28。light/dark の fg・muted・subtle・accent-text × bg/surface/surface-2、callout 文字 × soft 背景、ボタン文字を検証。`subtle` のライト値が surface-2 上で 4.26:1 だったため `#646b7b` に変更。加えて axe-core で `tests/e2e/a11y.spec.ts`（WCAG 2.0/2.1/2.2 A・AA、両テーマ、主要ページ・検索ダイアログ・モバイルドロワー）が違反 0） |
 | S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `scripts/screenshots.mjs` | 一部実施（2026-11-28。home / カテゴリ / 記事 3 本 / 404 を light・dark × desktop・mobile で取得し、qa-engineer が一部を目視。ホームのカテゴリカードで「準備中」が縦に折り返す問題を修正。人間による最終確認は未実施） |
 
@@ -70,4 +70,23 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 ## 5. 未検証項目・既知の課題
 
-- 上記すべて未実施（Phase 0 時点）。
+最終更新：2026-11-28。解消したら削除するか、解消日と方法を追記する。
+
+### 未検証
+
+- **CI（GitHub Actions）は未実行**：リポジトリへ push していないため、`ci.yml` の verify / Docker ジョブ（nginx スモークテスト含む）は GitHub 上で一度も動いていない（S5 の nginx 部分、S6）。
+- **GitHub Pages へのデプロイは未実行**：`deploy.yml` はリポジトリ変数 `PAGES_DEPLOY_ENABLED=true` を所有者が設定するまで無効。公開 URL での確認も未実施。
+- **3 記事は人間レビュー未実施**：`cpu` / `memory-and-storage` / `cache-memory` は LLM レビューのみで、すべて `draft: true`。表示の人間による最終確認（S8）も未実施。
+- **出典の一部が未確認**：
+  - アムダール（Amdahl, 1967）の原論文の書誌情報（掲載誌・ページ等）は未確認（`cpu` 記事は講義ノートを出典としている）。
+  - Jeff Dean の講演資料（PDF）の数値は一部のみ確認（`memory-and-storage` / `cache-memory`）。
+  - Intel Smart Cache が全コアで共有されるかどうかは未確認（`cache-memory` / `cpu` は「プロセッサー全体の値」とだけ記述）。
+
+### 既知の課題・仕様上の制約
+
+- **日本語の禁則**：モバイル幅で、開き括弧などが行頭に来る折り返しが起きる箇所がある（ブラウザ既定の改行処理に依存）。
+- **Mermaid 図の横スクロール**：自然幅の 80% より狭い画面では、文字を読める大きさに保つため図の枠内で横スクロールする（仕様）。
+- **Pagefind の複数語クエリ**：日本語の複数語クエリでは助詞（「の」「を」等）などの短い語にもヒットし、関係の薄い結果や強調が混ざることがある。
+- **qa の匿名 volume**：qa の `node_modules` は qa イメージから作られるため、`package-lock.json` を変更したら `docker compose build qa` を実行しないと古い依存で検証される。
+- **hooks はホストの Node.js 18 以上が必要**：hooks はコンテナではなくホストで動く。Node が無い・古い環境では hook が失敗する（非ブロッキングだが、ガードや品質ゲートが働かない）。
+- **guard-command はヒューリスティック**：文字列解析による誤操作防止であり、セキュリティ境界ではない（変数展開・難読化・スクリプト経由の操作は検出できない場合がある。[HARNESS.md](./HARNESS.md) 5 章）。

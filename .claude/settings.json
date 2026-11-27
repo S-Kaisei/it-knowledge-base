@@ -20,6 +20,8 @@
       "Bash(docker compose run --rm qa npm run test:e2e)",
       "Bash(docker compose run --rm qa npm run test:e2e -- *)",
       "Bash(docker compose run --rm qa npx playwright test *)",
+      "Bash(docker compose run --rm qa npm run screenshots:drafts)",
+      "Bash(docker compose run --rm qa npm run screenshots:drafts -- *)",
       "Bash(docker compose up -d --build web)",
       "Bash(docker compose up -d web)",
       "Bash(docker compose --profile preview up -d --build preview)",

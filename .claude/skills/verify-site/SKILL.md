@@ -25,7 +25,7 @@ allowed-tools:
 2. 実行:
    - 引数に `--quick` があれば `docker compose run --rm qa npm run verify -- --quick`
    - それ以外は `docker compose run --rm qa npm run verify`
-3. 出力から各ステップ（型チェック → ESLint → Markdownlint → Prettier → コンテンツ構造検証 → ユニット → コンポーネント → ビルド → 内部リンク → E2E）の結果を抽出する。最初の失敗で停止した場合、以降のステップは「未実行」とする。
+3. 出力末尾の要約表から各ステップ（型チェック → ESLint → Markdownlint → Prettier → コンテンツ構造検証 → ユニット → コンポーネント → ビルド → サブパスビルド → 内部リンク → サブパスのリンク → E2E。`--quick` はコンポーネントまで）の結果を抽出する。最初の失敗で停止した場合、以降のステップは「未実行」とする。
 4. 失敗があればログから原因箇所（ファイル:行、エラーメッセージ）を要約する。修正はしない（修正は `develop` スキル等で別途行う）。
 
 ## 出力形式
