@@ -114,6 +114,14 @@ export function splitSegments(cmd) {
 
 const WRAPPERS = new Set(['env', 'nice', 'nohup', 'time', 'command', 'builtin', 'exec', 'stdbuf', 'ionice']);
 
+// Wrapper options that take a separate value argument (the value must not be mistaken for the command).
+const WRAPPER_VALUE_FLAGS = {
+  nice: ['-n'],
+  ionice: ['-c', '-n', '-p'],
+  stdbuf: ['-i', '-o', '-e'],
+  env: ['-u', '-C', '-S'],
+};
+
 /** Remove leading VAR=value assignments and transparent wrappers. Returns {argv, sudo}. */
 function unwrap(argv) {
   let a = [...argv];
@@ -133,8 +141,9 @@ function unwrap(argv) {
       a = a.slice(1);
       while (a.length && a[0].startsWith('-')) a = a.slice(1);
     } else if (WRAPPERS.has(a[0])) {
+      const valueFlags = WRAPPER_VALUE_FLAGS[a[0]] ?? [];
       a = a.slice(1);
-      while (a.length && a[0].startsWith('-')) a = a.slice(1);
+      while (a.length && a[0].startsWith('-')) a = a.slice(valueFlags.includes(a[0]) ? 2 : 1); // e.g. `nice -n 5 cmd`
     } else break;
   }
   return { argv: a, sudo };
