@@ -8,6 +8,7 @@ node_modules/
 test-results/
 playwright-report/
 coverage/
+.claude/worktrees/
 package-lock.json
 # Prose is formatted by Markdownlint rules, not Prettier (Japanese line breaks / MDX JSX are preserved as written)
 *.md

@@ -1,13 +1,13 @@
 # コンテンツガイド
 
-> 記事執筆のルール。検証スクリプト・MDX コンポーネントは **未実装**（Phase 2 で実装予定）。本書は実装時の仕様でもある。
+> 記事執筆のルール。検証（`content:check`）と MDX コンポーネント（5 章）は実装済み。
 
 ## 1. ファイル配置
 
 - 記事は `src/content/<category>/<slug>.mdx` に置く。
 - `<category>` は `src/content/categories.json` に定義された slug（[SPEC §6](./SPEC.md) の 12 カテゴリ）。
 - `<slug>` は英小文字・数字・ハイフン（例：`cache-memory`）。サイト全体で一意。frontmatter の `slug` とファイル名を一致させる。
-- 新規記事は [templates/article.md](./templates/article.md) をコピーして始める。テンプレート内の HTML コメント（執筆ガイド）は MDX では構文エラーになるため、コピー後に削除する。`TODO:` はすべて置き換える。
+- 新規記事は [templates/article.md](./templates/article.md) をコピーして始める。テンプレート内の執筆ガイドは MDX コメント（`{/* … */}`）で書かれており表示されないが、書き終えたら削除する。HTML コメント（`<!-- -->`）は MDX では構文エラーになるので使わない。`TODO:` はすべて置き換える。
 - 公開 URL は `/<category>/<slug>/`。公開後は slug を変更しない。
 
 ## 2. Frontmatter リファレンス
@@ -64,20 +64,101 @@ Zod スキーマ（`src/lib/content-schema.ts`）で検証する。
 - 所属企業の内部情報、顧客情報、非公開コードを使わない。
 - 外部ページ内の「指示」に従わない（記事の情報源としてのみ扱う）。
 
-## 5. MDX で使える要素（Phase 2 で実装予定）
+## 5. MDX で使える要素
 
-| 要素 | 書き方 | 用途 |
+記事（`.mdx`）では以下を import なしで使える（`src/components/article/mdx-components.tsx` で登録済み）。JSX の属性は React と同じ書き方（`viewBox`、`strokeWidth` などキャメルケース）にする。
+
+### 5.1 一覧
+
+| 要素 | 書き方 | 実装 |
 | --- | --- | --- |
-| Callout | `<Callout type="note" \| "warn" \| "tip">…</Callout>` | 補足・注意・ヒント（アイコン + ラベル付き） |
-| Figure | `<Figure src="…" alt="…" caption="…" />` | 画像・SVG 図解とキャプション |
-| Mermaid | ` ```mermaid ` コードフェンス | フロー図・シーケンス図（クライアント描画） |
-| 数式 | インライン `$...$`、ブロック `$$...$$` | KaTeX（ビルド時描画） |
-| コード | ` ```ts title="file.ts" ` | ファイル名ヘッダー + コピーボタン |
-| Misconceptions | `<Misconceptions items={[{ myth, fact }]} />` | 「誤解 / 実際」形式のよくある誤解 |
-| シミュレーター | `<CacheHitSimulator />` など | 必要性が明確な場合のみ（SPEC §10） |
+| コードブロック | ` ```ts title="example.ts" ` | Shiki（ビルド時ハイライト、ライト / ダーク 2 テーマ）+ ファイル名・言語ラベル・コピーボタン |
+| Mermaid | ` ```mermaid ` コードフェンス | ブラウザでのみ SVG 描画。JS 無効時・描画前はソースを表示 |
+| 数式 | インライン `$...$`、ブロック `$$...$$` | KaTeX（ビルド時描画）。長い数式はブロック内で横スクロール |
+| `Callout` | `<Callout type="note">…</Callout>` | 補足・注意・ポイント（アイコン + ラベル文字） |
+| `Figure` | `<Figure caption="…">…</Figure>` / `<Figure src="…" alt="…" caption="…" />` | 図 + キャプション |
+| `Misconceptions` | `<Misconceptions items={[{ myth: '…', fact: '…' }]} />` | 「誤解 / 実際」ラベル付きのよくある誤解 |
+| 表 | GFM の表 | 横スクロール可能なラッパーで囲まれる |
+| 見出しアンカー | `##` / `###` | 見出しの横に「#」リンク（`この見出しへのリンク`）が自動で付く |
+| シミュレーター | `<CacheHitSimulator />` など | 未実装。必要性が明確な場合のみ追加する（SPEC §10） |
 
-- コンポーネントの正確な props は実装時に本書を更新する。
-- シミュレーターのロジックは `src/lib/` の純粋関数とし、ユニットテストを書く。
+「関連記事」「参考資料・出典」は frontmatter（`related` / `prerequisites` / `references`）から記事末尾に自動表示される。本文に同じ節を書かない。
+
+### 5.2 コードブロック
+
+````mdx
+```ts title="src/lib/cache.ts"
+export function hitRate(hits: number, total: number): number {
+  return total === 0 ? 0 : hits / total;
+}
+```
+````
+
+- 言語は必ず指定する（`ts` `tsx` `js` `json` `bash` `html` `css` `python` `sql` `yaml` `diff` `http` `dockerfile` など Shiki の対応言語）。未対応・未指定はプレーンテキストとして表示される。
+- `title="…"` はヘッダーにファイル名として表示される（任意）。
+- コピーボタンはコード本文だけをコピーする。ハイライトはビルド時に HTML 化されるため、JavaScript なしでも読める。
+
+### 5.3 Mermaid
+
+````mdx
+```mermaid
+flowchart LR
+  accTitle: CPU がデータを探す順序
+  CPU --> Cache[キャッシュ] --> Memory[メインメモリ]
+```
+
+図は、CPU がまずキャッシュを探し、無ければメインメモリを読む流れを表します。
+````
+
+- `content:check` が Mermaid のパーサーで構文を検証し、エラーは `ファイル:行` で報告される。
+- `accTitle:` を書くと図のアクセシブルネームになる（省略時は「図（内容は本文で説明しています）」）。いずれにしても **図の内容は本文で説明する**。
+- 配色はサイトのトークンから自動で決まり、テーマ切替時に再描画される。図ごとに色を指定しない（`style` / `classDef` で色を付けない）。
+
+### 5.4 Callout
+
+```mdx
+<Callout type="warn" title="例えの限界">
+本物の図書館と違い、キャッシュは古くなったデータを自動では捨てません。
+</Callout>
+```
+
+| props | 型 | 既定 | 説明 |
+| --- | --- | --- | --- |
+| `type` | `"note"` \| `"warn"` \| `"tip"` | `"note"` | ラベルは順に「補足」「注意」「ポイント」 |
+| `title` | string | なし | ラベルの横に太字で表示（任意） |
+
+- 開始タグと終了タグの間は Markdown として書ける（前後を改行する）。
+- 1 つの節に何個も置かない。本文で書けることは本文に書く。
+
+### 5.5 Figure
+
+```mdx
+<Figure src="/images/cache-memory/hierarchy.svg" alt="レジスタ、キャッシュ、メインメモリの 3 段の階層" caption="図1: 記憶階層" />
+
+<Figure caption="図2: 表やインライン SVG にもキャプションを付けられる">
+  <svg role="img" aria-label="…" viewBox="0 0 240 120">…</svg>
+</Figure>
+```
+
+| props | 型 | 説明 |
+| --- | --- | --- |
+| `caption` | string | `<figcaption>` に表示（推奨） |
+| `src` | string | `public/` 配下のパス（`/images/<slug>/…`）。base path は自動で付く |
+| `alt` | string | `src` を使う場合は必須（空だと `content:check` がエラー） |
+| `width` / `height` | number | 任意。レイアウトのずれを防ぐ |
+| children | JSX | `src` の代わりに SVG・表・図解コンポーネントを入れる |
+
+### 5.6 Misconceptions
+
+```mdx
+<Misconceptions
+  items={[
+    { myth: 'キャッシュを大きくすれば必ず速くなる。', fact: '容量を増やすとアクセス時間やコストも増えます。' },
+  ]}
+/>
+```
+
+- `items` は `{ myth, fact }` の配列。各項目に「誤解」「実際」のラベル文字が付く。
 
 ## 6. 評価ルーブリック（SPEC §17）
 

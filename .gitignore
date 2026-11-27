@@ -22,6 +22,7 @@ coverage/
 # Claude Code (personal settings and hook state are not shared)
 .claude/settings.local.json
 .claude/.state/
+.claude/worktrees/
 
 # OS / editor
 .DS_Store

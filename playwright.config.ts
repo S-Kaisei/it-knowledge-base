@@ -27,11 +27,15 @@ export default defineConfig({
     { name: 'site', testMatch: /site\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: `http://127.0.0.1:${SITE_PORT}` } },
     {
       name: 'fixture',
-      testIgnore: /(site|subpath|mobile)\.spec\.ts/,
+      testIgnore: /(site|subpath|search-subpath|mobile)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, baseURL: `http://127.0.0.1:${FIXTURE_PORT}` },
     },
     { name: 'mobile', testMatch: /mobile\.spec\.ts/, use: { ...devices['Pixel 7'], baseURL: `http://127.0.0.1:${FIXTURE_PORT}` } },
-    { name: 'subpath', testMatch: /subpath\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: `http://127.0.0.1:${SUBPATH_PORT}${SUBPATH_BASE}` } },
+    {
+      name: 'subpath',
+      testMatch: /(subpath|search-subpath)\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], baseURL: `http://127.0.0.1:${SUBPATH_PORT}${SUBPATH_BASE}` },
+    },
   ],
   webServer: [
     {

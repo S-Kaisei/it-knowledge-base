@@ -17,6 +17,7 @@ export default tseslint.config(
       'test-results/',
       'playwright-report/',
       'coverage/',
+      '.claude/worktrees/',
     ],
   },
   js.configs.recommended,

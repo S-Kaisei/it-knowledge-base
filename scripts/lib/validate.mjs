@@ -2,8 +2,40 @@
 // Items that need human/technical review are listed in HUMAN_REVIEW_ITEMS and never auto-passed.
 import fs from 'node:fs';
 import path from 'node:path';
+import { compile } from '@mdx-js/mdx';
 import matter from 'gray-matter';
+import katex from 'katex';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import { visit } from 'unist-util-visit';
 import { PROJECT_ROOT, articlePath, buildContentIndex, contentDir, loadCategories, readArticles } from './content.mjs';
+
+/**
+ * Strict KaTeX check of every math node, with file line numbers.
+ * The site renders with throwOnError: false, which hides e.g. undefined commands (shown in red, no
+ * .katex-error element), so the build-time KaTeX check alone would miss them.
+ * @param {string} source whole file (frontmatter included, so positions are file lines)
+ * @returns {Promise<Array<{ line?: number, message: string }>>}
+ */
+export async function checkMath(source) {
+  const problems = [];
+  const collect = () => (tree) => {
+    visit(tree, ['math', 'inlineMath'], (node) => {
+      try {
+        katex.renderToString(node.value, { displayMode: node.type === 'math', throwOnError: true, strict: 'ignore' });
+      } catch (e) {
+        const message = String(e?.message ?? e)
+          .replace(/^KaTeX parse error:\s*/, '')
+          .replace(/\s+/g, ' ')
+          .slice(0, 200);
+        problems.push({ line: node.position?.start.line, message });
+      }
+    });
+  };
+  await compile(source, { format: 'mdx', remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMath, collect] });
+  return problems;
+}
 
 export const REQUIRED_FIELDS = [
   'title',
@@ -55,6 +87,87 @@ export function extractLinks(lines) {
     for (const m of stripped.matchAll(/\b(href|src)=["']([^"']+)["']/g)) links.push({ line, image: m[1] === 'src', alt: null, href: m[2] });
   }
   return links;
+}
+
+/**
+ * ```mermaid fences in an article body with the 1-based file line of the opening fence.
+ * Fences nested in longer fences (e.g. a ````md example) are ignored.
+ * @returns {Array<{ line: number, code: string }>}
+ */
+export function extractMermaidBlocks(body, startLine = 1) {
+  const blocks = [];
+  let fence = null;
+  body.split(/\r?\n/).forEach((text, i) => {
+    const m = text.match(/^\s{0,3}(`{3,}|~{3,})\s*([^\s`]*)/);
+    if (!fence) {
+      if (m) fence = { marker: m[1], line: startLine + i, mermaid: m[2] === 'mermaid', lines: [] };
+      return;
+    }
+    if (m && m[1][0] === fence.marker[0] && m[1].length >= fence.marker.length && text.trim() === m[1]) {
+      if (fence.mermaid) blocks.push({ line: fence.line, code: fence.lines.join('\n') });
+      fence = null;
+      return;
+    }
+    fence.lines.push(text);
+  });
+  return blocks;
+}
+
+let mermaidPromise;
+/**
+ * Mermaid for Node. mermaid.parse() needs a DOM for DOMPurify (used by flowchart, class, state, gantt,
+ * mindmap and others), so a jsdom window is installed as `window`/`document` before mermaid is imported.
+ * The globals stay for the rest of the process (content:check is a short-lived CLI; vitest isolates files).
+ * Limitation: parse() validates syntax only. Layout/render-time failures (rare) are caught by E2E through
+ * the `data-mermaid-error` attribute set by src/components/diagrams/mermaid.tsx.
+ */
+async function loadMermaid() {
+  mermaidPromise ??= (async () => {
+    if (typeof globalThis.window === 'undefined') {
+      const { JSDOM } = await import('jsdom');
+      const { window } = new JSDOM('<!doctype html><html><body></body></html>');
+      globalThis.window = window;
+      globalThis.document = window.document;
+    }
+    const { default: mermaid } = await import('mermaid');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
+    return mermaid;
+  })();
+  return mermaidPromise;
+}
+
+/**
+ * Validate Mermaid source with mermaid's own parser.
+ * @returns {Promise<null | { line?: number, message: string }>} line is relative to the diagram (1 = first line)
+ */
+export async function checkMermaid(code) {
+  const mermaid = await loadMermaid();
+  try {
+    await mermaid.parse(code);
+    return null;
+  } catch (e) {
+    const raw = String(e?.message ?? e);
+    const lineMatch = /on line (\d+)/.exec(raw);
+    const message = raw
+      .split('\n')
+      .filter((l) => l.trim() && !/^-*\^$/.test(l.trim()))
+      .join(' / ')
+      .replace(/\s+/g, ' ')
+      .slice(0, 240);
+    return { line: lineMatch ? Number(lineMatch[1]) : undefined, message };
+  }
+}
+
+/** `<Figure src="...">` without a non-empty alt (images inside Figure need alternative text). */
+export function figuresWithoutAlt(body, startLine = 1) {
+  const out = [];
+  for (const m of body.matchAll(/<Figure\b([^>]*)>/g)) {
+    const attrs = m[1];
+    if (!/\bsrc=/.test(attrs)) continue;
+    const alt = /\balt=(?:"([^"]*)"|'([^']*)')/.exec(attrs);
+    if (!alt || !(alt[1] ?? alt[2] ?? '').trim()) out.push({ line: startLine + body.slice(0, m.index).split('\n').length - 1 });
+  }
+  return out;
 }
 
 /** "Today" in Japan Standard Time: the site's dates are written in JST regardless of the container's TZ. */
@@ -132,6 +245,22 @@ export async function validateContent({ dir = contentDir(), publicDir = path.joi
       }
       if (PLACEHOLDER_RE.test(text)) problem(`未完成のプレースホルダーがあります: ${text.trim().slice(0, 60)}`, line);
     }
+
+    // Mermaid syntax (drafts included: a broken diagram is a build-quality problem, not a content one).
+    for (const block of extractMermaidBlocks(a.body, a.bodyStartLine)) {
+      const err = await checkMermaid(block.code);
+      if (err) errors.push({ file, line: block.line + (err.line ?? 0), message: `Mermaid の構文エラー: ${err.message}` });
+    }
+    // Math (strict). MDX syntax errors were already reported by the compile step above.
+    const mathProblems = await checkMath(fs.readFileSync(a.abs, 'utf8')).catch(() => []);
+    if (mathProblems.length) {
+      // Prefer these (with line numbers) over the line-less build-time KaTeX errors for the same file.
+      for (let i = errors.length - 1; i >= 0; i--) {
+        if (errors[i].file === file && !errors[i].line && errors[i].message.startsWith('数式をレンダリングできません')) errors.splice(i, 1);
+      }
+      for (const p of mathProblems) errors.push({ file, line: p.line, message: `数式をレンダリングできません: ${p.message}` });
+    }
+    for (const { line } of figuresWithoutAlt(a.body, a.bodyStartLine)) errors.push({ file, line, message: '<Figure src> に代替テキスト（alt）がありません' });
 
     for (const link of extractLinks(lines)) {
       const { href, line } = link;

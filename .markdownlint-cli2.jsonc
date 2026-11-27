@@ -11,6 +11,7 @@
   "globs": ["**/*.md", "**/*.mdx"],
   "ignores": [
     "node_modules/**",
+    ".claude/worktrees/**",
     "build/**",
     "build-subpath/**",
     "build-e2e/**",
