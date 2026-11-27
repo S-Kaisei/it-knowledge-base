@@ -1,7 +1,7 @@
 # Claude Code ハーネス
 
 > 本書はハーネスの設計概要。各ファイルの正確な設定値は `.claude/` 配下の実ファイルを正とする。
-> 動作検証は **未実施**（結果は [EVALUATION.md](./EVALUATION.md) に記録する）。設計判断は [ADR 0007](./decisions/0007-claude-code-harness-design.md)。
+> 動作検証は **Phase 4 で H1〜H12・H15 を自動テストで実施済み**（H13・H14 は手動。詳細は EVALUATION.md）（結果は [EVALUATION.md](./EVALUATION.md) に記録する）。設計判断は [ADR 0007](./decisions/0007-claude-code-harness-design.md)。
 
 ## 1. 構成と役割分担
 
@@ -86,6 +86,8 @@
 - Docker が使えない場合は失敗扱いにせず「未検証」と報告させる。
 - 初期構築中（`package.json` や検証スクリプトが未作成）は該当チェックをスキップし、開発を停止させない。
 - 異常な入力（空・不正 JSON）でも例外終了せず、定義済みの既定動作を取る。各 hook に `timeout` を設定する。
+- `background_tasks` に実行中のタスクがある間はゲートを保留する（サブエージェントの作業途中のファイルを検証しない）。
+- guard-command は `nice -n 5 rm …` のように値つきオプションを持つラッパー（nice / ionice / stdbuf / env）を取り除いてから対象コマンドを判定する。値を取りこぼすと `rm -rf /` を素通りするため（Phase 4 のテストで発見・修正）。
 - hooks はホストの Node.js で動く（依存パッケージなし）。macOS / Linux / WSL のパス差・シェル差を考慮する。
 
 ## 6. Permissions
