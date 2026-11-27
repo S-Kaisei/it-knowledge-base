@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "fundamentals",
+    "name": "IT基礎",
+    "nameEn": "Fundamentals",
+    "description": "検証用カテゴリです。",
+    "topics": "検証",
+    "icon": "cpu",
+    "order": 1
+  },
+  {
+    "slug": "network",
+    "name": "ネットワーク",
+    "nameEn": "Network",
+    "description": "検証用カテゴリです。",
+    "topics": "検証",
+    "icon": "globe",
+    "order": 2
+  }
+]

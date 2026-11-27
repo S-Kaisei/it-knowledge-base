@@ -1,7 +1,12 @@
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactNode } from 'react';
 import { Link } from 'react-router';
+import { Mermaid } from '~/components/diagrams/mermaid';
 import { withBase } from '~/lib/utils';
+import { Callout } from './callout';
+import { CodeBlock } from './code-block';
+import { Figure } from './figure';
+import { Misconceptions } from './misconceptions';
 
 /** Internal links go through React Router (applies the base path); external links open normally. */
 function Anchor({ href = '', children, ...rest }: ComponentProps<'a'>) {
@@ -32,12 +37,31 @@ function Table(props: ComponentProps<'table'>) {
   );
 }
 
-/** Pre-rendered fallback for ```mermaid fences; replaced by the client renderer in Phase 2. */
-function Mermaid({ chart }: { chart: string }) {
+/** "#" link after h2/h3 (ids come from rehype-slug, the same ids as the TOC). */
+function HeadingAnchor({ id }: { id: string | undefined }) {
+  if (!id) return null;
   return (
-    <pre className="mermaid-source" data-mermaid-source="">
-      <code>{chart}</code>
-    </pre>
+    <a href={`#${id}`} className="heading-anchor" aria-label="この見出しへのリンク" data-pagefind-ignore="">
+      #
+    </a>
+  );
+}
+
+function H2({ id, children, ...rest }: ComponentProps<'h2'>) {
+  return (
+    <h2 id={id} {...rest}>
+      {children}
+      <HeadingAnchor id={id} />
+    </h2>
+  );
+}
+
+function H3({ id, children, ...rest }: ComponentProps<'h3'>) {
+  return (
+    <h3 id={id} {...rest}>
+      {children}
+      <HeadingAnchor id={id} />
+    </h3>
   );
 }
 
@@ -49,6 +73,12 @@ export const mdxComponents: MDXComponents = {
   a: Anchor,
   img: Img,
   table: Table,
+  h2: H2,
+  h3: H3,
+  pre: CodeBlock,
+  Callout,
+  Figure,
   Mermaid,
+  Misconceptions,
   wrapper: Wrapper,
 };

@@ -1,0 +1,37 @@
+---
+title: 検証用記事 bad-mermaid
+description: content:check の異常系を確認するための記事です。
+slug: bad-mermaid
+category: fundamentals
+difficulty: beginner
+tags: [fixture]
+prerequisites: []
+related: []
+order: 1
+draft: false
+lastUpdated: 2026-11-20
+lastVerified: 2026-11-20
+references:
+  - title: MDN Web Docs
+    url: https://developer.mozilla.org/ja/
+    accessed: 2026-11-20
+---
+
+## 図解
+
+正しい図です。
+
+```mermaid
+sequenceDiagram
+  Client->>Server: GET /
+```
+
+壊れた図です。
+
+```mermaid
+flowchart LR
+  A --> B
+  B --> -->
+```
+
+図の説明です。

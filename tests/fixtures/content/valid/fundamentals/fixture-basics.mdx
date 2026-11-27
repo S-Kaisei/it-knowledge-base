@@ -36,13 +36,40 @@ $$
 \text{実効アクセス時間} = h T_c + (1 - h) T_m
 $$
 
+長い数式はブロック内で横スクロールし、ページ全体ははみ出しません。
+
+$$
+T_{\text{avg}} = h_1 T_1 + (1 - h_1)\left(h_2 T_2 + (1 - h_2)\left(h_3 T_3 + (1 - h_3)\left(h_4 T_4 + (1 - h_4)\left(h_5 T_5 + (1 - h_5) T_{\text{memory}}\right)\right)\right)\right)
+$$
+
 ## コード
 
 ```ts title="example.ts"
+// 2 つの数を足し合わせます
 export function add(a: number, b: number): number {
   return a + b;
 }
 ```
+
+ファイル名のないコードブロックです。
+
+```bash
+npm run content:check
+```
+
+## 補足情報
+
+<Callout type="note">
+補足のコールアウトです。**強調**や `コード` も書けます。
+</Callout>
+
+<Callout type="warn" title="キャッシュの無効化">
+注意のコールアウトです。タイトル付きで表示されます。
+</Callout>
+
+<Callout type="tip">
+ポイントのコールアウトです。
+</Callout>
 
 ## 図解
 
@@ -52,3 +79,25 @@ flowchart LR
 ```
 
 図は CPU、キャッシュ、メモリの順にデータを探す流れを表します。
+
+<Figure caption="図1: 記憶階層の模式図（上ほど高速・小容量）">
+  <svg role="img" aria-label="レジスタ、キャッシュ、メモリの 3 段の階層" viewBox="0 0 240 132" width="240" height="132">
+    <rect x="70" y="4" width="100" height="36" rx="4" fill="none" stroke="currentColor" />
+    <text x="120" y="27" textAnchor="middle" fontSize="13" fill="currentColor">レジスタ</text>
+    <rect x="40" y="48" width="160" height="36" rx="4" fill="none" stroke="currentColor" />
+    <text x="120" y="71" textAnchor="middle" fontSize="13" fill="currentColor">キャッシュ</text>
+    <rect x="10" y="92" width="220" height="36" rx="4" fill="none" stroke="currentColor" />
+    <text x="120" y="115" textAnchor="middle" fontSize="13" fill="currentColor">メインメモリ</text>
+  </svg>
+</Figure>
+
+図1 は、上の段ほど高速で容量が小さいことを示します。
+
+## よくある誤解
+
+<Misconceptions
+  items={[
+    { myth: 'キャッシュを大きくすれば必ず速くなる。', fact: '容量を増やすとアクセス時間やコストも増えるため、階層ごとに適切な大きさがあります。' },
+    { myth: 'ヒット率は常に 100% を目指すべき。', fact: '実際のプログラムでは一定のミスは避けられず、ミス時の遅延も含めて評価します。' },
+  ]}
+/>
