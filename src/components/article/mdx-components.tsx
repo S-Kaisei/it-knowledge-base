@@ -2,10 +2,12 @@ import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Mermaid } from '~/components/diagrams/mermaid';
+import { EffectiveAccessTimeSimulator } from '~/components/simulators/effective-access-time-simulator';
 import { withBase } from '~/lib/utils';
 import { Callout } from './callout';
 import { CodeBlock } from './code-block';
 import { Figure } from './figure';
+import type { MdxComponentName } from './mdx-component-names';
 import { Misconceptions } from './misconceptions';
 
 /** Internal links go through React Router (applies the base path); external links open normally. */
@@ -69,6 +71,15 @@ function Wrapper({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Every name in MDX_COMPONENT_NAMES must be registered here (and nothing unlisted): checked by the type below.
+const customComponents = {
+  Callout,
+  EffectiveAccessTimeSimulator,
+  Figure,
+  Mermaid,
+  Misconceptions,
+} satisfies Record<MdxComponentName, unknown>;
+
 export const mdxComponents: MDXComponents = {
   a: Anchor,
   img: Img,
@@ -76,9 +87,6 @@ export const mdxComponents: MDXComponents = {
   h2: H2,
   h3: H3,
   pre: CodeBlock,
-  Callout,
-  Figure,
-  Mermaid,
-  Misconceptions,
+  ...customComponents,
   wrapper: Wrapper,
 };

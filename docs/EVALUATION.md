@@ -45,7 +45,9 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
 | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | — | まだ記録なし |
+| 2026-11-28 | H8（実地） | Claude Code セッション中の Stop イベント | Claude Code（ホスト）+ Docker Desktop, macOS | 成功 | 作業中に stop-check が `verify --quick` の Prettier 失敗を検知して停止をブロックした（実イベントでの発火を確認）。並行するサブエージェントの作業途中のファイルを検証した問題が判明し、background_tasks 実行中は保留するよう改善 |
+| 2026-11-28 | H7（実地） | Claude Code セッション中の PreToolUse | 同上 | 成功 | guard-command が実コマンドを停止（heredoc 本文の `.env` 文字列を誤検知 → heredoc 本文を検査対象外に修正。その後 `$(cat .env)` を含むテストコマンドを正しく拒否） |
+| 2026-11-28 | S1 | docker compose run --rm qa npm run verify | Docker Desktop, macOS | 成功 | Phase 2 統合後。E2E 43件、404 の繰り返しテスト 15件も成功 |
 
 記入例：`2026-12-05 / S1 / docker compose run --rm qa npm run verify / Docker Desktop, macOS / 失敗 / step 8 build で失敗、修正後に再実行`
 
@@ -55,7 +57,14 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | — | — | — | — | — | まだ記録なし |
+| 2026-11-28 | cache-memory | LLM（technical-reviewer、2回目） | 4 | 4 | 4 | 4 | 4 | 要修正（軽微） | 1回目の major（実効アクセス時間の減り方の誤記）を修正済み。2回目の major（R6春 問10 からの一般化）は最終仕上げで対応 |
+| 2026-11-28 | memory-and-storage | LLM（technical-reviewer、2回目） | 4 | 4 | 4 | 4 | 4 | 要修正（軽微） | 1回目の major（キャッシュの位置の誤り、理解度チェックが IPA サンプル問題と同構成）を修正済み |
+| 2026-11-28 | cpu | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 要修正（軽微） | 1回目は出典3点（CPU時間の式・アムダールの法則に出典なし）。追加調査で出典を補い再評価。シラバス表記（PC/IR/GR/MAR）は orchestrator が PDF 本文で確認 |
+| 2026-11-28 | cache-memory | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 11 |
+| 2026-11-28 | memory-and-storage | LLM（technical-reviewer、1回目） | 3 | 4 | 4 | 4 | 4 | 要修正 | major 2・minor 10 |
+| 2026-11-28 | cpu | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 3 | 要修正 | major 3・minor 12 |
+
+> いずれも LLM による評価であり、技術的正確性を保証しない。公開（`draft: false`）は人間の確認後に行う。
 
 ## 5. 未検証項目・既知の課題
 

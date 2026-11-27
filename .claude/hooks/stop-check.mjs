@@ -8,6 +8,7 @@
 //   - failures >= MAX_ATTEMPTS for this session   → stop blocking, report as unresolved
 //   - Docker unavailable                          → block ONCE asking Claude to report "未検証", then allow
 //   - package.json / script missing (bootstrap)   → gate skipped, never blocks
+//   - background subagents still running          → gate deferred (their files may be mid-edit)
 // Disable with IKB_STOP_CHECK=off.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -16,6 +17,14 @@ import { emitJson, isMain, projectDir, readHookInput, readJsonSafe, run, tail } 
 
 const MAX_ATTEMPTS = Number(process.env.IKB_STOP_CHECK_MAX_ATTEMPTS ?? 3);
 const GATE_TIMEOUT_MS = Number(process.env.IKB_STOP_CHECK_TIMEOUT_MS ?? 8 * 60 * 1000);
+
+/** Stop input carries `background_tasks` (running subagents / shells). Accept array or object shapes. */
+export function hasRunningBackgroundTasks(input) {
+  const t = input?.background_tasks;
+  if (!t) return false;
+  const list = Array.isArray(t) ? t : typeof t === 'object' ? Object.values(t) : [];
+  return list.some((x) => !x || typeof x !== 'object' || !('status' in x) || ['running', 'pending', 'in_progress'].includes(String(x.status)));
+}
 
 /** Classify changed paths into areas. */
 export function classifyChanges(files) {
@@ -130,6 +139,13 @@ async function main() {
   const project = projectDir();
   const files = gitChangedFiles(project);
   if (!files || files.length === 0) return; // not a repo, or nothing changed
+
+  // Background subagents may still be editing files: verifying their half-finished work would block
+  // the orchestrator for problems that aren't its own. Defer the gate until they finish.
+  if (hasRunningBackgroundTasks(input)) {
+    emitJson({ systemMessage: '[stop-check] バックグラウンドのタスクが実行中のため、品質ゲートは保留しました（完了後の停止時に実行されます）。' });
+    return;
+  }
 
   const relevant = files.filter((f) => !/^\.claude\/\.state\//.test(f));
   if (!relevant.length) return;
