@@ -1,48 +1,55 @@
 # コンテンツガイド
 
-> 記事執筆のルール。検証（`content:check`）と MDX コンポーネント（5 章）は実装済み。
+> 記事執筆のルール。検証（`content:check`、`scripts/lib/validate.mjs`）と MDX コンポーネント（5 章）は実装済み。規則の正はコードであり、本書と食い違う場合はコードに合わせて本書を直す。
 
 ## 1. ファイル配置
 
 - 記事は `src/content/<category>/<slug>.mdx` に置く。
-- `<category>` は `src/content/categories.json` に定義された slug（[SPEC §6](./SPEC.md) の 12 カテゴリ）。
+- `<category>` は `src/content/categories.json` に定義された slug（[SPEC §6](./SPEC.md) の 12 カテゴリ）。カテゴリ配下にサブディレクトリは置けない（画像は `public/images/<slug>/`）。
 - `<slug>` は英小文字・数字・ハイフン（例：`cache-memory`）。サイト全体で一意。frontmatter の `slug` とファイル名を一致させる。
 - 新規記事は [templates/article.md](./templates/article.md) をコピーして始める。テンプレート内の執筆ガイドは MDX コメント（`{/* … */}`）で書かれており表示されないが、書き終えたら削除する。HTML コメント（`<!-- -->`）は MDX では構文エラーになるので使わない。`TODO:` はすべて置き換える。
 - 公開 URL は `/<category>/<slug>/`。公開後は slug を変更しない。
 
 ## 2. Frontmatter リファレンス
 
-Zod スキーマ（`src/lib/content-schema.ts`）で検証する。
+Zod スキーマ（`src/lib/content-schema.ts`）で型を検証し、`content:check`（`scripts/lib/validate.mjs`）が追加の規則を検証する。スキーマは `strict` のため、下表にないキーはエラーになる。
 
 | フィールド | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `title` | string | ○ | 記事タイトル |
-| `description` | string | ○ | 1〜2 文の要約。一覧・meta description・検索結果に使う |
-| `slug` | string | ○ | ファイル名と一致、全体で一意 |
-| `category` | string | ○ | `categories.json` の slug。配置ディレクトリと一致 |
-| `difficulty` | `beginner` \| `intermediate` \| `advanced` | ○ | 難易度（UI は 3 段階バー + ラベル） |
-| `tags` | string[] | ○ | 検索・分類用。空配列可 |
-| `prerequisites` | string[]（slug） | ○ | 前提知識となる記事。空配列可 |
-| `related` | string[]（slug） | ○ | 関連記事。空配列可 |
-| `order` | number | ○ | カテゴリ内の並び順（前後記事の決定に使う） |
+| `title` | string（1〜80 文字） | ○ | 記事タイトル |
+| `description` | string（10〜200 文字） | ○ | 1〜2 文の要約。一覧・meta description・OGP に使う |
+| `slug` | string（`^[a-z0-9]+(-[a-z0-9]+)*$`） | ○ | ファイル名と一致、全体で一意 |
+| `category` | string（slug 形式） | ○ | `categories.json` の slug。配置ディレクトリと一致 |
+| `difficulty` | `beginner` \| `intermediate` \| `advanced` | ○ | 難易度（UI は 3 段階バー +「初級 / 中級 / 上級」） |
+| `tags` | string[] | ○ | 分類用。空配列可 |
+| `prerequisites` | string[]（slug） | ○ | 前提知識となる記事。記事冒頭の「前提：」に表示。空配列可 |
+| `related` | string[]（slug） | ○ | 関連記事。記事末尾に表示。空配列可 |
+| `order` | 0 以上の整数 | ○ | カテゴリ内の並び順（同順位はタイトル順。前後記事の決定に使う） |
 | `draft` | boolean | ○ | `true` は本番ビルド・検索・sitemap から除外 |
 | `lastUpdated` | `YYYY-MM-DD` | ○ | 内容を実際に更新した日 |
-| `lastVerified` | `YYYY-MM-DD` | ○ | 出典を実際に確認した日。確認したときのみ更新 |
+| `lastVerified` | `YYYY-MM-DD` | ○ | 出典を実際に確認した日。確認したときのみ更新（スキーマ上は省略可だが、`content:check` が必須扱い） |
 | `references` | object[] | ○ | 出典。下表参照 |
+
+- スキーマには既定値（`tags: []`、`order: 100`、`draft: false` など）があるが、これは堅牢性のためで、`content:check` は 13 項目すべてが **明示的に書かれている** ことを求める（公開記事はエラー、下書きは警告）。
 
 `references[]` の要素：
 
 | フィールド | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
 | `title` | string | ○ | 資料名 |
-| `url` | string（URL） | ○ | 実在し、実際に開いて確認した URL |
+| `url` | string（`http` / `https` の URL） | ○ | 実在し、実際に開いて確認した URL |
 | `publisher` | string | — | 発行元（IPA、IETF、MDN など） |
 | `accessed` | `YYYY-MM-DD` | ○ | 確認日 |
 
-ルール：
+`references[]` も `strict`（他のキーは不可）。
 
-- 日付は実際の日付のみ。将来日付・推測日付を入れない。
-- `prerequisites` / `related` に存在しない slug や draft 記事の slug を入れない（公開記事の場合は検証エラー）。
+ルール（`content:check`）：
+
+- 日付は `YYYY-MM-DD` で、実在する日付。YAML で引用符なしに書いた日付も文字列として扱われる。
+- `lastUpdated`・`lastVerified`・各 `accessed` が **日本時間（JST）の今日** より未来ならエラー（下書きでもエラー）。コンテナの TZ に関係なく JST で判定する。
+- `references` が空なら公開記事はエラー（下書きは警告）。出典 URL の重複は警告。
+- `prerequisites` / `related` に自分自身・存在しない slug を入れるとエラー（下書きでも）。公開記事から下書き記事を参照するとエラー。
+- `related` は双方向を推奨（相手側に無ければ警告）。
 
 ## 3. 執筆原則（SPEC §7）
 
@@ -67,6 +74,9 @@ Zod スキーマ（`src/lib/content-schema.ts`）で検証する。
 ## 5. MDX で使える要素
 
 記事（`.mdx`）では以下を import なしで使える（`src/components/article/mdx-components.tsx` で登録済み）。JSX の属性は React と同じ書き方（`viewBox`、`strokeWidth` などキャメルケース）にする。
+
+- 大文字で始まる JSX タグは `src/components/article/mdx-component-names.ts` の一覧（`Callout`、`EffectiveAccessTimeSimulator`、`Figure`、`Mermaid`、`Misconceptions`）に無いと `content:check` がエラーにする（未登録のコンポーネントは実行時にページを壊すため）。新しいコンポーネントは一覧と `mdx-components.tsx` の両方に登録する（型で一致を検査）。
+- `Mermaid` は通常 ` ```mermaid ` フェンスから自動で使われる。直接書く必要はない。
 
 ### 5.1 一覧
 
@@ -142,7 +152,7 @@ flowchart LR
 
 | props | 型 | 説明 |
 | --- | --- | --- |
-| `caption` | string | `<figcaption>` に表示（推奨） |
+| `caption` | string（JSX も可） | `<figcaption>` に表示（推奨） |
 | `src` | string | `public/` 配下のパス（`/images/<slug>/…`）。base path は自動で付く |
 | `alt` | string | `src` を使う場合は必須（空だと `content:check` がエラー） |
 | `width` / `height` | number | 任意。レイアウトのずれを防ぐ |
@@ -204,12 +214,18 @@ LLM（technical-reviewer 等）の採点だけで技術的正確性を保証し�
 | `prerequisites` / `related` の存在しない slug | 出典の内容が主張を実際に裏付けているか |
 | 内部リンク切れ、存在しない画像 | 著作権上の問題がないか |
 | 見出し階層の飛び（h2 → h4 等） | 対象読者・難易度設定の妥当性 |
-| 未完成プレースホルダー（`TODO:` 等）の残存 | |
-| 出典不足（`references` が空） | |
-| 公開記事から draft 記事へのリンク | |
-| Mermaid 構文エラー、KaTeX レンダリングエラー | |
+| 本文の h1 | |
+| 未完成プレースホルダー（`TODO` `FIXME` `TBD` `XXX` `lorem ipsum`「ここに本文を」「（要確認）」等）の残存 | |
+| 必須項目の書き漏れ、出典不足（`references` が空）、`lastVerified` なし | |
+| 未来の日付（JST 基準） | |
+| 公開記事から draft 記事へのリンク・参照 | |
+| 未登録の MDX コンポーネント | |
+| Mermaid 構文エラー（パーサーのみ。描画時の失敗は E2E）、KaTeX エラー（strict）、MDX のコンパイルエラー | |
+| 画像・`<Figure src>` の代替テキスト欠落 | |
 
-- 外部リンクの通信失敗は **警告**、内部リンク切れは **エラー** として区別する。
+- 外部リンクの通信失敗は **警告**、内部リンク切れは **エラー** として区別する。外部リンクは `links:check -- --external` を実行したときだけ確認する（verify では確認しない）。
+- 下書き記事は、必須項目の書き漏れ・出典不足・プレースホルダーが **警告** になる。それ以外（スキーマ、日付、リンク切れ、Mermaid / KaTeX、未登録コンポーネント等）は下書きでもエラー。
+- `content:check` は通過後に「自動検証の対象外（人間の確認が必要）」の項目を表示する。
 
 ## 8. 人間によるレビューのチェックポイント
 
@@ -221,3 +237,25 @@ LLM（technical-reviewer 等）の採点だけで技術的正確性を保証し�
 4. 図解が本文で説明されているか、図が誤解を招かないか。
 5. ルーブリック全軸 4 点以上か（評価結果は [EVALUATION.md](./EVALUATION.md) に記録）。
 6. `lastUpdated` / `lastVerified` が実際の日付か。
+
+## 9. 公開までの流れ
+
+1. **執筆**：`draft: true` で作成する（`/add-topic` では technical-writer が担当）。`docker compose exec web npm run content:check` を通す。
+2. **独立レビュー**：`technical-reviewer` を新しいコンテキストで起動し、ファイルパスだけを渡す（`/review-content`）。blocker / major を直し、全軸 4 点以上・blocker なしになるまで繰り返す。結果は [EVALUATION.md](./EVALUATION.md) §4 に LLM 評価として記録する。
+3. **表示確認**：下記 10 章の方法でライト / ダーク × デスクトップ / モバイルを確認する（図解・数式・表・シミュレーターを含む記事は必須）。
+4. **人間レビュー**：8 章のチェックポイントを人間が確認する。LLM の評価だけで公開しない。
+5. **公開**：人間の承認後に `draft: false` にする（`lastUpdated` は内容を変えた場合のみ更新）。公開記事になると下書きでは警告だった項目がエラーになり、公開記事から下書きへのリンクもエラーになるため、`content:check` と `docker compose run --rm qa npm run verify` を再実行する。
+
+## 10. 下書きのプレビュー
+
+下書きは本番ビルド（`npm run build`）に含まれない。
+
+- **開発サーバー**：`docker compose up -d --build web` → `http://127.0.0.1:5173/<category>/<slug>/`。下書きも表示され、記事冒頭に「下書き」の帯、サイドバーに「（下書き）」が付く。保存すると content index とルートが自動で更新される。検索は使えない（本番ビルドのみ）。
+- **静的ビルド + スクリーンショット**：本番と同じ HTML・Mermaid 描画を確認する場合。
+
+  ```bash
+  docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
+  # → test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png
+  ```
+
+  `screenshots.mjs` は HTTP エラー、ページの JS エラー、Mermaid の描画エラー（`data-mermaid-error`）、横スクロールの発生も報告する。`build-drafts/` は確認専用で、CI・デプロイでは作成できない。

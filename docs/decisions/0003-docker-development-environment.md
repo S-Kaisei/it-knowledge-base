@@ -37,3 +37,8 @@
 - named volume の node_modules は lockfile 変更時に `npm ci` で更新が必要（[DEVELOPMENT.md](../DEVELOPMENT.md)）。
 - Docker が使えない環境では検証が「未検証」になる。
 - Docker 操作は強力なため、Permissions で個別コマンドのみ許可する。
+
+## 追記（2026-11-28）
+
+- `qa` の `node_modules` は named volume ではなく **匿名 volume**（`docker compose run --rm` のたびに qa イメージの内容から作られる）。lockfile を変えたら `docker compose build qa` が必要。
+- `qa` イメージには hooks のテスト（一時 git リポジトリ）用に `git` を追加した。全サービスで `cap_drop: ALL`・`no-new-privileges` を設定し、preview は読み取り専用ルートファイルシステムで動かす。

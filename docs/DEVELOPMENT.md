@@ -1,6 +1,6 @@
 # 開発ガイド
 
-> Docker 環境・npm scripts は **未実装**。本書の手順は設計上の想定であり、Phase 1 で実際に動作確認して更新する。
+> Docker 環境・npm scripts は実装済み。本書の手順は実地で確認している（コマンドの正は `package.json`・`compose.yaml`・`Dockerfile`）。
 
 ## 1. 前提
 
@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | Docker（Docker Desktop / Docker Engine + Compose v2） | ○ | 開発・検証はすべてコンテナで実行 |
 | Git | ○ | |
-| Node.js 26（ホスト） | 任意 | Claude Code の hooks 実行やエディタ補完用。ビルド・テストはコンテナで行う |
+| Node.js（ホスト） | Claude Code を使う場合は 18 以上 | Claude Code の hooks 実行用（依存パッケージなし）。ビルド・テストはコンテナで行う |
 | Claude Code | 任意 | ホストで実行する（コンテナには入れない） |
 
 コンテナの Node.js は `node:26.13.1-bookworm-slim` に固定（[ADR 0002](./decisions/0002-node-and-library-versions.md)）。
@@ -21,7 +21,8 @@
 | `preview` | `production` | `--profile preview` | `127.0.0.1:8080` | nginx（非 root）で本番相当の静的配信 |
 | `qa` | `qa` | `docker compose run --rm qa ...` | なし | 型・lint・テスト・ビルド・E2E（Chromium） |
 
-- `web` はソースを bind mount（`.:/app`）、`node_modules` は named volume。`qa` は匿名 volume を使い、`docker compose run --rm` のたびに qa イメージ内の `node_modules` から作り直される（lockfile とイメージが常に一致）。
+- `web` はソースを bind mount（`.:/app`）、`node_modules` は named volume。`qa` は匿名 volume を使い、`docker compose run --rm` のたびに qa イメージ内の `node_modules` から作り直される（qa イメージをビルドした時点の lockfile と一致。lockfile を変えたら `docker compose build qa`）。
+- web / qa は `node` ユーザー（uid 1000）で動き、全サービスで `cap_drop: ALL`・`no-new-privileges`。preview は読み取り専用ルートファイルシステム。
 - privileged・Docker ソケット・ホームディレクトリのマウントはしない。
 
 ## 3. 基本コマンド
@@ -66,10 +67,10 @@ docker compose down
 macOS / Windows の一部環境や WSL のマウント越しでは、ファイル変更イベントがコンテナに届かないことがある。その場合のみ polling を有効にする。
 
 ```bash
-CHOKIDAR_USEPOLLING=true VITE_USE_POLLING=true docker compose up -d web
+VITE_USE_POLLING=true docker compose up -d web
 ```
 
-- polling は CPU 負荷が上がるため既定では無効。
+- `compose.yaml` が `VITE_USE_POLLING` を web コンテナに渡し、`vite.config.ts` が `server.watch.usePolling`（間隔 300ms）を有効にする。polling は CPU 負荷が上がるため既定では無効。
 
 ## 6. base path ビルド
 
@@ -89,7 +90,7 @@ BASE_PATH=/it-knowledge-base/ docker compose --profile preview up -d --build pre
 下書き（`draft: true`）は本番ビルドに含まれない。開発サーバー（`dev`）では表示される。レビュー用の静的ビルドとスクリーンショットは次のとおり（**確認専用。CI・デプロイでは使えない**）。
 
 ```bash
-docker compose run --rm qa sh -c "npm run build:drafts && node scripts/screenshots.mjs --dir build-drafts/client /fundamentals/cpu/"
+docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
 # → test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png
 #   Mermaid の描画エラーと横スクロールの発生も検出して報告する
 ```
@@ -98,23 +99,23 @@ docker compose run --rm qa sh -c "npm run build:drafts && node scripts/screensho
 
 | script | 内容 |
 | --- | --- |
-| `dev` | Vite 開発サーバー（コンテナ内 `0.0.0.0:5173`） |
-| `typecheck` | `react-router typegen && tsc --noEmit` |
+| `dev` | 下書き込みで content index を生成（`--drafts --lenient`）→ Vite 開発サーバー（コンテナ内 `0.0.0.0:5173`、下書きも表示） |
+| `typecheck` | `content:generate` → `react-router typegen` → `tsc --noEmit` |
 | `lint` | ESLint |
 | `lint:md` | markdownlint-cli2 |
 | `format` / `format:check` | Prettier（書き込み / 確認のみ） |
-| `content:generate` | `src/generated/content-index.json` を生成 |
-| `content:check` | frontmatter・slug・リンク・見出し・プレースホルダー・Mermaid・KaTeX の検証 |
+| `content:generate` | `src/generated/content-index.json` を生成（`CONTENT_DIR` 指定時は `content-index.<dir>.json`） |
+| `content:check` | frontmatter・slug・日付（JST）・リンク・見出し・プレースホルダー・未登録 MDX コンポーネント・Mermaid・KaTeX・代替テキストの検証（[CONTENT_GUIDE.md](./CONTENT_GUIDE.md) 7 章） |
 | `test` | Vitest（unit + components） |
-| `test:e2e` | `build:e2e` → Playwright（site / fixture / mobile / subpath プロジェクト） |
+| `test:e2e` | `build:e2e` → Playwright（site / fixture / mobile / subpath プロジェクト）。`site` プロジェクトは `build/client` を使うため、先に `npm run build` が必要（verify では step 8 で生成済み） |
 | `build` | content:generate → react-router build → postbuild → pagefind（`build/client`） |
 | `build:subpath` | GitHub Pages 用（`BASE_PATH=/it-knowledge-base/` → `build-subpath/client`） |
 | `build:e2e` | fixture コンテンツでルート・サブパスをビルド（E2E 用） |
 | `build:drafts` | 下書きを含む確認用ビルド（`build-drafts/client`、CI では禁止） |
-| `screenshots` | 静的ビルドのページをライト/ダーク × デスクトップ/モバイルで撮影 |
+| `screenshots` | 静的ビルドのページをライト/ダーク × デスクトップ/モバイルで撮影（`--dir`、`--base`、`--port`、パスを引数で指定。既定は `build/client` の `/`） |
 | `serve` | GitHub Pages と同じ規則で静的ファイルを配信（E2E 用、本番サーバーではない） |
 | `links:check` / `links:check:subpath` | ビルド成果物の内部リンク・アンカー検証（`--external` で外部リンクを警告として確認） |
-| `verify` | 品質ゲート一式。`--quick` で typecheck + lint + content:check + test のみ |
+| `verify` | 品質ゲート一式。`--quick` は 1〜7（typecheck・ESLint・Markdownlint・Prettier・content:check・unit・components）のみ。`--list` で手順を表示 |
 
 ## 8. verify の順序
 

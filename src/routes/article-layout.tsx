@@ -64,7 +64,7 @@ export default function ArticleLayout() {
 
           {article.draft ? (
             <p className="mt-4 rounded-lg border border-warn/30 bg-warn-soft px-4 py-2 text-sm" data-pagefind-ignore="">
-              <b className="mr-3 text-warn">下書き</b>この記事は公開前の下書きです。開発サーバーでのみ表示されます。
+              <b className="mr-3 text-warn">下書き</b>この記事は公開前の下書きです。公開ビルドには含まれません。
             </p>
           ) : null}
 

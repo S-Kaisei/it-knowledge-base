@@ -33,3 +33,10 @@
 
 - prerender 中にブラウザ API を使えない。Mermaid・テーマ判定・検索は `useEffect` 内で行う。
 - 記事数に比例してビルド時間が増える。
+
+## 追記（2026-11-28）
+
+実装との差分（決定内容は変更なし）：
+
+- `buildDirectory` は `BUILD_DIR` 環境変数（既定 `build`）で切り替える。サブパス用 `build-subpath/`、E2E 用 `build-e2e*/`、下書き確認用 `build-drafts/` を同じ設定から作る。
+- prerender 一覧は生成済みの content index ではなく、`scripts/lib/content.mjs` の `listArticles()` / `loadCategories()` でコンテンツディレクトリを直接読んで作る（`/`、全カテゴリ、公開記事、`/404`）。

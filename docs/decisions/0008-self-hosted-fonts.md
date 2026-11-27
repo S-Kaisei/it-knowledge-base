@@ -31,3 +31,7 @@
 
 - Noto Sans JP はサイズが大きいため、`@fontsource` の unicode-range 分割を利用し、読み込むウェイトを最小限にする。
 - 具体的なパッケージ版は Phase 1 で導入時に確定し、`package-lock.json` で固定する。
+
+## 追記（2026-11-28）
+
+- 導入したパッケージ：`@fontsource-variable/inter` 5.3.0、`@fontsource/noto-sans-jp` 5.3.1（400 / 700 のみ）、`@fontsource-variable/jetbrains-mono` 5.3.0。`src/styles/app.css` で import する。

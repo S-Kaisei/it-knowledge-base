@@ -27,6 +27,7 @@
     "links:check:subpath": "BASE_PATH=/it-knowledge-base/ BUILD_DIR=build-subpath node scripts/check-links.mjs",
     "serve": "node scripts/serve-static.mjs",
     "screenshots": "node scripts/screenshots.mjs",
+    "screenshots:drafts": "npm run build:drafts && node scripts/screenshots.mjs --dir build-drafts/client",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
@@ -68,7 +69,6 @@
     "eslint": "10.15.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.8",
-    "github-slugger": "2.0.0",
     "globals": "17.14.0",
     "gray-matter": "4.0.3",
     "hast-util-to-string": "3.0.1",

@@ -14,7 +14,7 @@ paths:
 - 記事は `src/content/<category>/<slug>.mdx`。category は `src/content/categories.json` に存在するもののみ。
 - 必須項目: title, description, slug, category, difficulty, tags, prerequisites, related, order, draft, lastUpdated, lastVerified, references。スキーマは `src/lib/content-schema.ts`。
 - slug はファイル名と一致させ、全体で一意。公開後に変更しない。
-- `lastUpdated` は実際に内容を変更した日のみ更新。`lastVerified` は情報源を実際に確認した日のみ更新。未来日・推測日を書かない。
+- `lastUpdated` は実際に内容を変更した日のみ更新。`lastVerified` は情報源を実際に確認した日のみ更新。未来日・推測日を書かない（`content:check` は日本時間の今日より未来の日付をエラーにする）。
 - 新規記事は確認が済むまで `draft: true`。
 - `prerequisites` / `related` には存在する slug のみ。関連は原則双方向に張る。
 
@@ -39,8 +39,10 @@ paths:
 - 図の作り方は `create-diagram` スキルに従う。図の意味は本文でも説明する。
 - 画像は `public/images/<slug>/` に置き、代替テキストを付ける。
 - 数式は KaTeX（`$...$` / `$$...$$`）。コードブロックには言語を指定する。
+- 独自コンポーネントは `src/components/article/mdx-component-names.ts` に登録済みのもの（Callout / Figure / Misconceptions / EffectiveAccessTimeSimulator。Mermaid は ` ```mermaid ` から自動）のみ。未登録の大文字 JSX タグは `content:check` がエラーにする。
 
 ## 検証
 
 - 記事を変更したら `docker compose exec web npm run content:check` を実行する。
+- 表示確認（下書きを含む）: `docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/`。
 - 公開前に `technical-reviewer` による5軸レビューで全軸4点以上。重大な誤り・出典捏造・転載は公開不可。

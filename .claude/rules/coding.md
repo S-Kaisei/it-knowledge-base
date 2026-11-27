@@ -14,7 +14,7 @@ paths:
 
 - strict mode を維持する。`any`、`@ts-ignore`、`@ts-expect-error`（理由コメントなし）、非nullアサーション `!` の乱用を禁止。
 - 外部入力（Frontmatter、JSON、URLパラメータ）は Zod で検証してから使う。スキーマの唯一の定義元は `src/lib/content-schema.ts`。
-- 型は `src/types/`、純粋ロジックは `src/lib/`、React フックは `src/hooks/` に置く。
+- 型はコンテンツ関連なら `src/lib/content-schema.ts`（Zod から導出）、それ以外は利用箇所の近くに置く。純粋ロジックは `src/lib/`、React フックは `src/hooks/` に置く。
 - コード識別子・コメントは英語可。UI文言は日本語。
 
 ## React / React Router
