@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // E2E runs against static builds served with GitHub Pages semantics (scripts/serve-static.mjs).
-//   site     : the real site (build/client at /)                    — `npm run build` must run first
+//   site     : the real site (build/client at /)                    — `bun run build` must run first
 //   fixture  : fixture content (build-e2e/client at /)              — feature coverage with stable content
 //   mobile   : fixture content on a phone viewport
 //   subpath  : fixture content at /it-knowledge-base/ (GitHub Pages)
-// `npm run test:e2e` builds the fixture sites itself (build:e2e).
+// `bun run test:e2e` builds the fixture sites itself (build:e2e).
 const SITE_PORT = 4173;
 const FIXTURE_PORT = 4175;
 const SUBPATH_PORT = 4176;

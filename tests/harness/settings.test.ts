@@ -17,7 +17,7 @@ describe('settings.json: permissions', () => {
     expect(Array.isArray(settings.permissions.deny)).toBe(true);
   });
 
-  it('広すぎる Bash allow がない（Bash(*) / docker / docker compose exec / npx / sudo / rm など）', () => {
+  it('広すぎる Bash allow がない（Bash(*) / docker / docker compose exec / npx / bunx / sudo / rm など）', () => {
     const broad = [
       /^Bash$/,
       /^Bash\(\*\)$/,
@@ -25,6 +25,9 @@ describe('settings.json: permissions', () => {
       /^Bash\(docker compose \*\)$/,
       /^Bash\(docker compose exec (web )?\*\)$/,
       /^Bash\(npx \*\)$/,
+      /^Bash\(bunx \*\)$/,
+      /^Bash\(bun (x|run) \*\)$/,
+      /^Bash\(npm /,
       /^Bash\(sh \*\)$/,
       /^Bash\(bash \*\)$/,
       /^Bash\(rm /,
@@ -38,9 +41,9 @@ describe('settings.json: permissions', () => {
     }
   });
 
-  it('allow の `docker compose exec` は web サービスの npm run に限定されている', () => {
+  it('allow の `docker compose exec` は web サービスの bun run に限定されている', () => {
     for (const rule of settings.permissions.allow.filter((r) => r.startsWith('Bash(docker compose exec'))) {
-      expect(rule).toMatch(/^Bash\(docker compose exec web npm run [\w:-]+/);
+      expect(rule).toMatch(/^Bash\(docker compose exec web bun run [\w:-]+/);
     }
   });
 
@@ -52,6 +55,7 @@ describe('settings.json: permissions', () => {
       'docker system prune',
       'docker volume prune',
       'npm publish',
+      'bun publish',
       'sudo',
       'Read(./.env)',
       'Read(./.env.*)',

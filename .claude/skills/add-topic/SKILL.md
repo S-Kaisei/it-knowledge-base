@@ -29,10 +29,10 @@ SPEC §7 / §8 / §11 / §12 / §17 / §18 に従う。規約は `.claude/rules/
 8. **独立レビュー**: `technical-reviewer` サブエージェントを新しいコンテキストで起動し、**記事のファイルパスのみ**を渡す（執筆意図や自己評価は渡さない）。
 9. **修正**: blocker / major を修正する。修正後、変更が大きければ 8 を再実行する。全軸4点以上かつ blocker なしを目標とする。
 10. **検証**: 実行前に `package.json` の scripts を確認し、無いものは「未整備」と記録する。
-    - `docker compose exec web npm run content:check`
-    - 反復中: `docker compose run --rm qa npm run verify -- --quick`
-    - 最終: `docker compose run --rm qa npm run verify`
-    - 図解やレイアウトに影響があれば表示確認する（下書きのまま確認できる）: `docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/`。PNG の目視は `visual-reviewer` に依頼してよい。
+    - `docker compose exec web bun run content:check`
+    - 反復中: `docker compose run --rm qa bun run verify -- --quick`
+    - 最終: `docker compose run --rm qa bun run verify`
+    - 図解やレイアウトに影響があれば表示確認する（下書きのまま確認できる）: `docker compose run --rm qa bun run screenshots:drafts -- /<category>/<slug>/`。PNG の目視は `visual-reviewer` に依頼してよい。
     - Docker が使えなければ「未検証」と報告する（成功扱いにしない）。
 11. **報告**: 以下の形式で報告する。`draft: false` への切り替えは人間の確認後とする（ユーザーが明示した場合を除く）。
 

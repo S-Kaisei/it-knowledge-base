@@ -26,10 +26,10 @@ maxTurns: 80
 3. 変更計画（対象ファイル・方針）を簡潔に立ててから実装する。
 4. ロジックは純粋関数に分離し、`tests/unit/` または `tests/components/` にテストを書く。
 5. 検証（`package.json` に script があるものだけ。なければ「未整備」と報告）:
-   - `docker compose exec web npm run typecheck`
-   - `docker compose exec web npm run lint`
-   - `docker compose exec web npm run test`
-   - 必要に応じ `docker compose run --rm qa npm run verify -- --quick`
+   - `docker compose exec web bun run typecheck`
+   - `docker compose exec web bun run lint`
+   - `docker compose exec web bun run test`
+   - 必要に応じ `docker compose run --rm qa bun run verify -- --quick`
 6. 失敗を修正し再検証する。
 
 ## 出力形式

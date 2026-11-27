@@ -13,9 +13,9 @@ paths:
 ## イメージ
 
 - ベースイメージはタグを固定（例 `node:26.13.1-bookworm-slim`、`nginxinc/nginx-unprivileged:<固定版>-alpine`）。`latest` を使わない。
-- ステージ: `deps`（npm ci）→ `dev`（vite dev 0.0.0.0:5173）→ `builder`（npm run build、`ARG BASE_PATH`）→ `production`（Nginx 非root、`build/client` と `docker/nginx.conf` のみ）。`qa` は `deps` から派生し `npx playwright install --with-deps chromium`。
+- ステージ: `deps`（bun install --frozen-lockfile）→ `dev`（vite dev 0.0.0.0:5173）→ `builder`（bun run build、`ARG BASE_PATH`）→ `production`（Nginx 非root、`build/client` と `docker/nginx.conf` のみ）。`qa` は `deps` から派生し `bun run playwright install --with-deps chromium`。
 - `production` に Node.js・開発依存を含めない。Vite preview を本番サーバーにしない。
-- 依存インストールは `npm ci`（`npm install` 不可）。
+- 依存インストールは `bun install --frozen-lockfile`。依存の追加・更新は `bun add`（ロックファイルは `bun.lock`）。npm / `package-lock.json` は使わない。
 - `.env`、秘密鍵、`.git`、`node_modules`、`build`、`.claude/settings.local.json` を `.dockerignore` で除外する。
 
 ## Compose

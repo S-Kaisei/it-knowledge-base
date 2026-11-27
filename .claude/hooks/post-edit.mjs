@@ -153,9 +153,9 @@ async function main() {
 
   // Formatting (advisory): only when the dev container is already running; never starts containers.
   if (process.env.IKB_POST_EDIT_PRETTIER !== 'off' && PRETTIER_EXT.has(ext) && fs.existsSync(path.join(project, 'package.json')) && dockerWebRunning(project)) {
-    const r = run('docker', ['compose', 'exec', '-T', 'web', 'npx', '--no-install', 'prettier', '--check', rel], { cwd: project, timeoutMs: 20000 });
+    const r = run('docker', ['compose', 'exec', '-T', 'web', 'bun', 'run', 'prettier', '--check', rel], { cwd: project, timeoutMs: 20000 });
     if (!r.ok && !r.timedOut && /\[warn\]/.test(r.stdout + r.stderr)) {
-      warnings.push(`Prettier の整形差分があります。\`docker compose exec web npx prettier --write ${rel}\` で整形してください`);
+      warnings.push(`Prettier の整形差分があります。\`docker compose exec web bun run prettier --write ${rel}\` で整形してください`);
     }
   }
 

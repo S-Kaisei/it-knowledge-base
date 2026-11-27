@@ -35,9 +35,9 @@ argument-hint: "<実装・修正したい内容>"
 
 `package.json` に script が無いものは「未整備」として記録し、スキップした事実を報告する。
 
-- 反復中: `docker compose run --rm qa npm run verify -- --quick`
-  （または `docker compose exec web npm run typecheck` / `lint` / `test` を個別に）
-- 完了前: `docker compose run --rm qa npm run verify`
+- 反復中: `docker compose run --rm qa bun run verify -- --quick`
+  （または `docker compose exec web bun run typecheck` / `lint` / `test` を個別に）
+- 完了前: `docker compose run --rm qa bun run verify`
 - Docker 不可なら「未検証」と報告する。
 
 ## 6. Fix → Re-verify

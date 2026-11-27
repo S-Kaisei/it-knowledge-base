@@ -36,7 +36,7 @@ DoD：
 DoD：
 
 - [x] `docker compose up -d --build web` で起動し、HMR が動く（H13）
-- [x] `docker compose run --rm qa npm run verify` が成功する
+- [x] `docker compose run --rm qa bun run verify` が成功する
 - [x] 直接アクセスと 404 応答を確認（GitHub Pages 規則の静的サーバーで E2E。nginx の production イメージは CI の Docker スモークテストで 200 / 404 を確認する構成だが、CI は未実行）
 - [x] ルート / サブパス両方のビルドが成功（verify step 8 / 8b）
 - [x] [DEVELOPMENT.md](./DEVELOPMENT.md) の手順を実地確認して更新
@@ -88,7 +88,7 @@ DoD：
 
 | 成果物 | 内容 |
 | --- | --- |
-| CI | PR / main で `npm run verify`、Docker ビルド検証、コンテナ起動確認、レポート・失敗時スクリーンショット保存 |
+| CI | PR / main で `bun run verify`、Docker ビルド検証、コンテナ起動確認、レポート・失敗時スクリーンショット保存 |
 | Deploy | GitHub Pages（検証済み成果物をそのまま公開、最小権限） |
 | ドキュメント | README・開発資料の最終更新（docs をコードに同期済み） |
 
@@ -121,6 +121,6 @@ DoD：
 | シミュレーター追加 | CPI・MIPS、進数変換、サブネット計算、稼働率、アルゴリズム可視化、正規化、通信の流れ。記事で必要な場合のみ（現在は実効アクセス時間の 1 つ） |
 | Mermaid のレイアウト検査 | `content:check` は構文のみ。狭い画面での可読性・はみ出しを自動検査する仕組み（現在はスクリーンショットの目視と E2E の描画エラー検出のみ） |
 | Dependabot（GitHub Actions） | Action を SHA 固定しているため、更新 PR を自動化する（[ADR 0009](./decisions/0009-ci-cd-verified-artifact-deploy.md)） |
-| npm → bun 移行（予定） | パッケージマネージャー / ランタイムの移行。Docker・CI・hooks・ドキュメントのコマンドを一括で更新し、ADR を追加する |
+| npm → bun 移行（2026-11-28 完了） | パッケージマネージャー・スクリプト実行を bun 1.4.5 に移行（ランタイムは Node.js 26 のまま）。ADR-0010 |
 | 理解度確認問題 | ページ内完結、結果を保存しない |
 | 外部リンクの定期検査 | CI のスケジュール実行（警告のみ） |

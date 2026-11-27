@@ -42,3 +42,7 @@
 
 - `qa` の `node_modules` は named volume ではなく **匿名 volume**（`docker compose run --rm` のたびに qa イメージの内容から作られる）。lockfile を変えたら `docker compose build qa` が必要。
 - `qa` イメージには hooks のテスト（一時 git リポジトリ）用に `git` を追加した。全サービスで `cap_drop: ALL`・`no-new-privileges` を設定し、preview は読み取り専用ルートファイルシステムで動かす。
+
+## 追記（2026-11-28・bun 移行）
+
+`deps` ステージは `bun install --frozen-lockfile`（`bun.lock`）に変更した。bun のバイナリは `oven/bun:1.4.5-debian` からコピーし、ベースイメージは `node:26.13.1-bookworm-slim` のまま（[ADR-0010](./0010-bun-package-manager.md)）。

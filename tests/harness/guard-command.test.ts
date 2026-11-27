@@ -15,6 +15,8 @@ describe('guard-command: allowed routine commands', () => {
     'git diff --stat',
     'git checkout -b feature/x',
     'docker compose exec web npm run test',
+    'docker compose exec web bun run test',
+    'docker compose run --rm qa bun run verify -- --quick',
     'docker compose run --rm qa npm run verify',
     'docker compose down',
     'rm -rf build node_modules/.cache',
@@ -52,6 +54,7 @@ describe('guard-command: denied operations', () => {
     'cat <<EOF > x\n$(cat .env)\nEOF',
     'sudo ls',
     'npm publish',
+    'bun publish',
     'claude --dangerously-skip-permissions',
   ])('denies: %s', (cmd) => {
     expect(bash(cmd)).toBe('deny');
@@ -62,6 +65,9 @@ describe('guard-command: operations that need explicit approval', () => {
   it.each([
     'git push',
     'npm run build && git push origin main',
+    'bun run build && git push origin main',
+    'bunx vercel deploy',
+    'bun x netlify deploy',
     'git reset --hard HEAD~1',
     'git checkout -- .',
     'git clean -fd',

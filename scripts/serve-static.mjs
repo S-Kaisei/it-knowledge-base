@@ -18,7 +18,7 @@ const port = Number(opt('port', '4173'));
 const base = opt('base', '/').replace(/\/?$/, '/');
 
 if (!fs.existsSync(root)) {
-  console.error(`serve-static: ${root} がありません。先に npm run build を実行してください`);
+  console.error(`serve-static: ${root} がありません。先に bun run build を実行してください`);
   process.exit(1);
 }
 

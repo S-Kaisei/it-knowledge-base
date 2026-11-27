@@ -18,7 +18,7 @@ maxTurns: 60
 - 編集してよい: 依頼で指定された `src/content/<category>/<slug>.mdx`、`public/images/<slug>/` 配下。
 - 双方向リンクのため、依頼で明示された既存記事の Frontmatter `related` / `prerequisites` のみ追記可。
 - 編集してはいけない: 上記以外すべて（`src/` のコード、`categories.json`、`docs/`、`tests/`、`scripts/`、`.claude/`、設定ファイル）。必要なら変更提案として報告する。
-- Bash は検証専用: `docker compose exec web npm run content:check`、`docker compose exec web npm run lint:md` のみ。
+- Bash は検証専用: `docker compose exec web bun run content:check`、`docker compose exec web bun run lint:md` のみ。
 
 ## 手順
 

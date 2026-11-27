@@ -45,6 +45,7 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | bun 移行（S1・H8） | `docker compose run --rm qa bun run verify`、`echo '{…}' \| node .claude/hooks/stop-check.mjs`、`docker compose --profile preview up -d --build preview` | Docker Desktop, macOS | 成功 | npm → bun 1.4.5（ADR-0010）。verify 12 段階・unit/harness 269・components 41・E2E 全件成功。実 web コンテナでの Stop フック（`bun run verify -- --quick`）も通過。移行中に web イメージに git が無く Stop フックのゲートが常に失敗する既存の問題（Phase 4 で harness テスト追加以降）を発見し、base ステージに git を導入して解消 |
 | 2026-11-28 | S7, S8 | docker compose run --rm qa npm run verify（コントラスト unit・axe E2E・キーボード E2E を含む）、`node scripts/screenshots.mjs --dir build-drafts/client …` | Docker Desktop, macOS | 成功 | axe 違反（本文リンクが色のみで区別、スクロール可能な数式にキーボードで到達不可）を修正、`subtle` トークンを調整、ホームの「準備中」折り返しを修正 |
 | 2026-11-28 | H1〜H12, H15 | `docker compose run --rm qa npm run verify -- --quick` / `docker compose run --rm qa npm run verify`（tests/harness 7 ファイル） | Docker Desktop, macOS | 成功 | Phase 4。hook は一時リポジトリ + 偽 docker で実行し、危険コマンドは解析のみ。発見・修正: guard-command が `nice -n 5 rm -rf /` を素通りしていた（値つきオプションを取りこぼし）。qa イメージに git を追加 |
 | 2026-11-28 | H8（実地） | Claude Code セッション中の Stop イベント | Claude Code（ホスト）+ Docker Desktop, macOS | 成功 | 作業中に stop-check が `verify --quick` の Prettier 失敗を検知して停止をブロックした（実イベントでの発火を確認）。並行するサブエージェントの作業途中のファイルを検証した問題が判明し、background_tasks 実行中は保留するよう改善 |
@@ -87,6 +88,7 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 - **日本語の禁則**：モバイル幅で、開き括弧などが行頭に来る折り返しが起きる箇所がある（ブラウザ既定の改行処理に依存）。
 - **Mermaid 図の横スクロール**：自然幅の 80% より狭い画面では、文字を読める大きさに保つため図の枠内で横スクロールする（仕様）。
 - **Pagefind の複数語クエリ**：日本語の複数語クエリでは助詞（「の」「を」等）などの短い語にもヒットし、関係の薄い結果や強調が混ざることがある。
-- **qa の匿名 volume**：qa の `node_modules` は qa イメージから作られるため、`package-lock.json` を変更したら `docker compose build qa` を実行しないと古い依存で検証される。
+- **qa の匿名 volume**：qa の `node_modules` は qa イメージから作られるため、`bun.lock` を変更したら `docker compose build qa` を実行しないと古い依存で検証される。web は named volume のため `docker compose exec web bun install --frozen-lockfile` で入れ替える。
+- **web 起動直後の型生成の競合**：web コンテナの起動直後（開発サーバーが `.react-router/types` を生成中）に `typecheck` を実行すると、まれに一時的に失敗する。数秒おいて再実行すれば通る（2026-11-28 に 1 回観測、直後の 2 回連続実行は成功）。
 - **hooks はホストの Node.js 18 以上が必要**：hooks はコンテナではなくホストで動く。Node が無い・古い環境では hook が失敗する（非ブロッキングだが、ガードや品質ゲートが働かない）。
 - **guard-command はヒューリスティック**：文字列解析による誤操作防止であり、セキュリティ境界ではない（変数展開・難読化・スクリプト経由の操作は検出できない場合がある。[HARNESS.md](./HARNESS.md) 5 章）。

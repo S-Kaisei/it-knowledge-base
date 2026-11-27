@@ -17,7 +17,7 @@ const fail = (msg) => {
 if (!fs.existsSync(client)) fail(`${client} がありません。react-router build を先に実行してください`);
 
 const index = JSON.parse(fs.readFileSync(contentIndexFile(), 'utf8'));
-// Draft builds are allowed only for local visual review (npm run build:drafts → build-drafts/). Never in CI/deploy.
+// Draft builds are allowed only for local visual review (bun run build:drafts → build-drafts/). Never in CI/deploy.
 if (index.includeDrafts && process.env.ALLOW_DRAFT_BUILD !== 'true') {
   fail('下書きを含むコンテンツインデックスで本番ビルドされています（content:generate を --drafts なしで実行してください）');
 }

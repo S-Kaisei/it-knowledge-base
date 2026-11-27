@@ -55,3 +55,7 @@ Node.js **26.13.1**（Active LTS "Lithium"）。Docker イメージは `node:26.
 
 - typescript-eslint が TypeScript 7 に対応した時点で、新しい ADR で更新を検討する。
 - Node のバージョンは Dockerfile、`package.json` の `engines`、CI で一致させる。
+
+## 追記（2026-11-28）
+
+パッケージマネージャーは npm から bun 1.4.5 に移行した（[ADR-0010](./0010-bun-package-manager.md)）。Node.js 26 は引き続き実行環境として使う。

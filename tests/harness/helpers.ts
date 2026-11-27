@@ -51,7 +51,7 @@ case "$1" in
   compose)
     case "$*" in
       *" ps "*) exit 0 ;;
-      *" npm "*)
+      *" bun run "*)
         if [ "$FAKE_DOCKER" = "fail" ]; then
           echo "line1"; echo "FAKE GATE FAILURE: lint exploded" >&2; exit 1
         fi

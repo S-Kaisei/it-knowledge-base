@@ -11,18 +11,18 @@ const quick = args.has('--quick');
 
 /** @type {Array<{ id: string, label: string, cmd: string[], env?: Record<string,string>, quick?: boolean }>} */
 export const STEPS = [
-  { id: 'typecheck', label: '1. TypeScript 型チェック', cmd: ['npm', 'run', 'typecheck'], quick: true },
-  { id: 'lint', label: '2. ESLint', cmd: ['npm', 'run', 'lint'], quick: true },
-  { id: 'lint:md', label: '3. Markdownlint', cmd: ['npm', 'run', 'lint:md'], quick: true },
-  { id: 'format', label: '4. Prettier', cmd: ['npm', 'run', 'format:check'], quick: true },
-  { id: 'content', label: '5. コンテンツ構造検証', cmd: ['npm', 'run', 'content:check'], quick: true },
-  { id: 'unit', label: '6. ユニットテスト', cmd: ['npx', 'vitest', 'run', '--project', 'unit'], quick: true },
-  { id: 'components', label: '7. コンポーネントテスト', cmd: ['npx', 'vitest', 'run', '--project', 'components'], quick: true },
-  { id: 'build', label: '8. 静的サイトビルド（ルート配信）', cmd: ['npm', 'run', 'build'] },
-  { id: 'build:subpath', label: '8b. 静的サイトビルド（GitHub Pages サブパス）', cmd: ['npm', 'run', 'build:subpath'] },
-  { id: 'links', label: '9. 内部リンク検証', cmd: ['npm', 'run', 'links:check'] },
-  { id: 'links:subpath', label: '9b. 内部リンク検証（サブパス）', cmd: ['npm', 'run', 'links:check:subpath'] },
-  { id: 'e2e', label: '10. Playwright E2E', cmd: ['npm', 'run', 'test:e2e'] },
+  { id: 'typecheck', label: '1. TypeScript 型チェック', cmd: ['bun', 'run', 'typecheck'], quick: true },
+  { id: 'lint', label: '2. ESLint', cmd: ['bun', 'run', 'lint'], quick: true },
+  { id: 'lint:md', label: '3. Markdownlint', cmd: ['bun', 'run', 'lint:md'], quick: true },
+  { id: 'format', label: '4. Prettier', cmd: ['bun', 'run', 'format:check'], quick: true },
+  { id: 'content', label: '5. コンテンツ構造検証', cmd: ['bun', 'run', 'content:check'], quick: true },
+  { id: 'unit', label: '6. ユニットテスト', cmd: ['bun', 'run', 'vitest', 'run', '--project', 'unit'], quick: true },
+  { id: 'components', label: '7. コンポーネントテスト', cmd: ['bun', 'run', 'vitest', 'run', '--project', 'components'], quick: true },
+  { id: 'build', label: '8. 静的サイトビルド（ルート配信）', cmd: ['bun', 'run', 'build'] },
+  { id: 'build:subpath', label: '8b. 静的サイトビルド（GitHub Pages サブパス）', cmd: ['bun', 'run', 'build:subpath'] },
+  { id: 'links', label: '9. 内部リンク検証', cmd: ['bun', 'run', 'links:check'] },
+  { id: 'links:subpath', label: '9b. 内部リンク検証（サブパス）', cmd: ['bun', 'run', 'links:check:subpath'] },
+  { id: 'e2e', label: '10. Playwright E2E', cmd: ['bun', 'run', 'test:e2e'] },
 ];
 
 const steps = STEPS.filter((s) => !quick || s.quick);

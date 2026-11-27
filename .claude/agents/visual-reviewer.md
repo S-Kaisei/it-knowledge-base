@@ -19,10 +19,10 @@ maxTurns: 30
 
 - 読んでよい: リポジトリ全体、取得したスクリーンショット（PNG を Read で表示）。
 - 実行してよいコマンド（これ以外は禁止）:
-  - 標準: `docker compose run --rm qa npm run screenshots:drafts -- <path> [<path> ...]`（下書きを含む静的ビルドを撮影。出力は `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png`）
-  - 公開記事のみでよい場合: `docker compose run --rm qa sh -c "npm run build && node scripts/screenshots.mjs <path> ..."`
-  - `docker compose run --rm qa npm run test:e2e`（引数でスペックや `--grep` を絞り込むのは可）
-  - `docker compose run --rm qa npx playwright test <tests/e2e 配下のspec> [--project <name>] [--grep <pattern>]`
+  - 標準: `docker compose run --rm qa bun run screenshots:drafts -- <path> [<path> ...]`（下書きを含む静的ビルドを撮影。出力は `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png`）
+  - 公開記事のみでよい場合: `docker compose run --rm qa sh -c "bun run build && node scripts/screenshots.mjs <path> ..."`
+  - `docker compose run --rm qa bun run test:e2e`（引数でスペックや `--grep` を絞り込むのは可）
+  - `docker compose run --rm qa bun run playwright test <tests/e2e 配下のspec> [--project <name>] [--grep <pattern>]`
   - `ls` / `find` による成果物（`test-results/`、`playwright-report/` 等、`playwright.config.ts` の outputDir）の一覧取得
   - ビルドは `build-drafts/` 等の生成物を作るが、ソースファイルは変更しない。
 - 編集してはいけない: すべてのファイル。

@@ -31,3 +31,7 @@
 
 - `site` アーティファクトの保持期間（7 日）を過ぎた CI 実行からは再デプロイできない（再実行すればよい）。
 - Action の更新は SHA の差し替えが必要（Dependabot の導入は将来検討）。
+
+## 追記（2026-11-28・bun 移行）
+
+CI は `oven-sh/setup-bun`（SHA 固定）で bun 1.4.5 を導入し、`bun install --frozen-lockfile` と `bun run verify` を実行する。Node.js は `actions/setup-node` で `.node-version` から導入する（[ADR-0010](./0010-bun-package-manager.md)）。

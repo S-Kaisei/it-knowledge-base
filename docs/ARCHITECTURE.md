@@ -44,7 +44,7 @@ flowchart LR
 
 ## 2. ビルドパイプライン
 
-`npm run build` は以下を順に実行する。途中で失敗したら非ゼロ終了。
+`bun run build` は以下を順に実行する。途中で失敗したら非ゼロ終了。
 
 | # | ステップ | 実体 | 出力 |
 | --- | --- | --- | --- |
@@ -64,7 +64,7 @@ flowchart LR
 
 - `draft: true` の記事は `listArticles()` の時点で除外され、ルート・prerender・content index・検索・sitemap に現れない（`INCLUDE_DRAFTS=true` のときのみ含む）。
 - postbuild は content index が下書き入り（`includeDrafts: true`）なのに `ALLOW_DRAFT_BUILD=true` でなければ失敗する。GitHub Actions 上（`CI=true` かつ `GITHUB_ACTIONS=true`）では `ALLOW_DRAFT_BUILD` があっても失敗する。
-- 開発サーバー（`npm run dev`）は `content:generate -- --drafts --lenient` の後に `INCLUDE_DRAFTS=true` で起動し、下書きも表示する（エラーがあっても起動は続ける）。
+- 開発サーバー（`bun run dev`）は `content:generate -- --drafts --lenient` の後に `INCLUDE_DRAFTS=true` で起動し、下書きも表示する（エラーがあっても起動は続ける）。
 
 ## 3. ルーティング
 
@@ -160,7 +160,7 @@ layout('routes/site-layout.tsx', [
 
 ## 6. 検索
 
-- Pagefind 1.6.0 を `npm run build` の最後に `<BUILD_DIR>/client` に対して実行する。
+- Pagefind 1.6.0 を `bun run build` の最後に `<BUILD_DIR>/client` に対して実行する。
 - 索引対象は記事レイアウトの `<article data-pagefind-body>` のみ。パンくず・記事メタ・下書き表示・インライン目次・関連記事・出典・ページャ・Mermaid 図・シミュレーター・見出しアンカーは `data-pagefind-ignore`。トップ・カテゴリ・404 は body 属性を持たないため索引されない。下書きは本番ビルドに含まれないため索引にも出ない。
 - メタデータ：`title` は記事 h1（`data-pagefind-meta="title"`。`<title>` の「| IT Knowledge Base」は含まない）、`category` はカテゴリ名。
 
@@ -175,7 +175,7 @@ layout('routes/site-layout.tsx', [
 - **抜粋の安全な表示**：`dangerouslySetInnerHTML` は使わない。`parseExcerpt()` が `<mark>` だけを強調区間として認識し（属性は捨てる）、他のタグや文字参照はテキストとして React に渡す。
 - **日本語入力**：IME 変換中（`compositionstart`〜`compositionend`、`isComposing`、keyCode 229）は検索も Enter による遷移も行わない。
 - **アクセシビリティ**：ダイアログ名「サイト内検索」、入力は `role="combobox"` + `aria-activedescendant`、結果は `role="listbox"` / `option`（実体は `<a href>`）、`role="status"` で件数や状態を通知。閉じると開く前の要素へフォーカスを戻す。
-- **開発サーバー**：インデックスが無いため「検索インデックスは本番ビルド後に利用できます（npm run build）」と表示する（404 リクエストもコンソールエラーも発生させない）。
+- **開発サーバー**：インデックスが無いため「検索インデックスは本番ビルド後に利用できます（bun run build）」と表示する（404 リクエストもコンソールエラーも発生させない）。
 - テスト：`tests/unit/search.test.ts`、`tests/components/search-dialog.test.tsx`、`tests/e2e/search.spec.ts`（fixture）、`tests/e2e/search-subpath.spec.ts`（subpath）。詳細は [ADR 0005](./decisions/0005-search-with-pagefind.md)。
 
 ## 7. 配信と 404
@@ -199,12 +199,12 @@ Playwright の 4 プロジェクト（`playwright.config.ts`）。各ビルド�
 
 | project | 対象 spec | 配信するビルド | 備考 |
 | --- | --- | --- | --- |
-| `site` | `site.spec.ts` | `build/client`（実コンテンツ、`/`） | `npm run build` が先に必要（verify では step 8 で生成済み） |
+| `site` | `site.spec.ts` | `build/client`（実コンテンツ、`/`） | `bun run build` が先に必要（verify では step 8 で生成済み） |
 | `fixture` | 上記・下記以外すべて | `build-e2e/client`（fixture、`/`） | デスクトップ 1440×900 |
 | `mobile` | `mobile.spec.ts` | `build-e2e/client` | Pixel 7 |
 | `subpath` | `subpath.spec.ts`、`search-subpath.spec.ts` | `build-e2e-subpath/client`（`/it-knowledge-base/`） | |
 
-- `npm run test:e2e` は `build:e2e` を実行してから Playwright を起動する。
+- `bun run test:e2e` は `build:e2e` を実行してから Playwright を起動する。
 - 品質ゲート `scripts/verify.mjs` の順序は [DEVELOPMENT.md](./DEVELOPMENT.md#8-verify-の順序) を参照。
 
 ## 9. ディレクトリ責務

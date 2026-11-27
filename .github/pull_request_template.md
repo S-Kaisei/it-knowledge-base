@@ -11,7 +11,7 @@
 
 ## 検証
 
-- [ ] `docker compose run --rm qa npm run verify` が成功した
+- [ ] `docker compose run --rm qa bun run verify` が成功した
 - [ ] UI を変更した場合、ライト / ダーク / モバイルのスクリーンショットを確認した
 - [ ] 記事を変更した場合、technical-reviewer の 5 軸評価で全軸 4 点以上（結果を docs/EVALUATION.md に記録）
 
