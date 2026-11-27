@@ -10,21 +10,21 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | # | 検証項目 | 方法 | テスト場所 | 状態 |
 | --- | --- | --- | --- | --- |
-| H1 | 正常な記事追加が成功する | 正常 MDX fixture で `content:generate` → `build`、ルートと HTML 生成を確認 | `tests/harness/`, `tests/fixtures/` | 未実施 |
-| H2 | 不正 Frontmatter を検出 | 必須欠落・型不正・不正日付の fixture で `content:check` が非ゼロ終了 | `tests/harness/` | 未実施 |
-| H3 | 内部リンク切れを検出 | 存在しない slug へのリンク fixture で `content:check` / `links:check` が失敗 | `tests/harness/` | 未実施 |
-| H4 | 重複 slug を検出 | 同一 slug 2 ファイルの fixture | `tests/harness/` | 未実施 |
-| H5 | 不正な数式・図解を検出 | KaTeX エラー / Mermaid 構文エラー fixture | `tests/harness/` | 未実施 |
-| H6 | draft が公開されない | draft fixture がルート・prerender・Pagefind・sitemap に含まれないことを確認 | `tests/harness/`, `tests/e2e/` | 未実施 |
-| H7 | 危険コマンドの制限 | `guard-command.mjs` に危険コマンドの PreToolUse 入力を与え `deny` / `ask` を確認 | `tests/harness/` | 未実施 |
-| H8 | Stop hook が失敗を検知 | 検証失敗状態で `stop-check.mjs` が block を返す | `tests/harness/` | 未実施 |
-| H9 | Stop hook の無限ループ防止 | `stop_hook_active: true` と試行カウンタ上限で block しないことを確認 | `tests/harness/` | 未実施 |
-| H10 | 読み取り専用レビュー | reviewer 系エージェントの `tools` に Edit / Write / Bash がないことを静的検査 + 実セッションで編集不可を確認 | `tests/harness/` | 未実施 |
-| H11 | Docker 不可時の報告 | Docker 不在をシミュレートし、Stop hook が失敗ではなく「未検証」を報告 | `tests/harness/` | 未実施 |
-| H12 | 変更なしで不要な検証をしない | クリーンな作業ツリーで Stop hook が検証をスキップ | `tests/harness/` | 未実施 |
-| H13 | Compose 起動の再現性 | クリーン状態から `docker compose up -d --build web` → HTTP 200、`down` 後に再実行 | 手動 / CI | 未実施 |
-| H14 | hooks の実イベント発火 | `claude -p` で各イベントを発火させ、`--debug` ログで実行を確認（`--bare` は使わない） | 手動 | 未実施 |
-| H15 | 初期構築中に開発を止めない | スクリプト未作成状態で hooks がエラー停止しない | `tests/harness/` | 未実施 |
+| H1 | 正常な記事追加が成功する | 正常 MDX fixture で `content:generate` → `build`、ルートと HTML 生成を確認 | `tests/harness/`, `tests/fixtures/` | 成功（`tests/harness/content-check.test.ts`（valid fixture）, `tests/e2e/`（fixture プロジェクトのビルド）） |
+| H2 | 不正 Frontmatter を検出 | 必須欠落・型不正・不正日付の fixture で `content:check` が非ゼロ終了 | `tests/harness/` | 成功（`tests/harness/content-check.test.ts`（bad-frontmatter / bad-date）, `tests/harness/post-edit.test.ts`） |
+| H3 | 内部リンク切れを検出 | 存在しない slug へのリンク fixture で `content:check` / `links:check` が失敗 | `tests/harness/` | 成功（`tests/harness/content-check.test.ts`（broken-link / draft-link）） |
+| H4 | 重複 slug を検出 | 同一 slug 2 ファイルの fixture | `tests/harness/` | 成功（`tests/harness/content-check.test.ts`（duplicate-slug）） |
+| H5 | 不正な数式・図解を検出 | KaTeX エラー / Mermaid 構文エラー fixture | `tests/harness/` | 成功（`tests/harness/content-check.test.ts`（bad-math / bad-mermaid / unknown-component）） |
+| H6 | draft が公開されない | draft fixture がルート・prerender・Pagefind・sitemap に含まれないことを確認 | `tests/harness/`, `tests/e2e/` | 成功（`tests/harness/content-check.test.ts`（draft-link）, `tests/e2e/navigation.spec.ts`（ルート・sitemap）） |
+| H7 | 危険コマンドの制限 | `guard-command.mjs` に危険コマンドの PreToolUse 入力を与え `deny` / `ask` を確認 | `tests/harness/` | 成功（`tests/harness/guard-command.test.ts`（deny / ask / 許可、heredoc、サブプロセス）） |
+| H8 | Stop hook が失敗を検知 | 検証失敗状態で `stop-check.mjs` が block を返す | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（一時 repo + 偽 docker）） |
+| H9 | Stop hook の無限ループ防止 | `stop_hook_active: true` と試行カウンタ上限で block しないことを確認 | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（stop_hook_active、MAX_ATTEMPTS）） |
+| H10 | 読み取り専用レビュー | reviewer 系エージェントの `tools` に Edit / Write / Bash がないことを静的検査 + 実セッションで編集不可を確認 | `tests/harness/` | 成功（静的: `tests/harness/agents-readonly.test.ts`, `tests/harness/settings.test.ts`。実セッション: 2026-11-28 に technical-reviewer を 6 回起動し、いずれも Read/Grep/Glob/WebFetch/WebSearch のみで作業を完了、作業ツリーへの変更なし。ツールに Edit/Write/Bash が無いため編集を試みることもできない構成） |
+| H11 | Docker 不可時の報告 | Docker 不在をシミュレートし、Stop hook が失敗ではなく「未検証」を報告 | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`, `tests/harness/session-start.test.ts`（偽 docker で不可をシミュレート）） |
+| H12 | 変更なしで不要な検証をしない | クリーンな作業ツリーで Stop hook が検証をスキップ | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（docker 呼び出し 0 回を確認）） |
+| H13 | Compose 起動の再現性 | クリーン状態から `docker compose up -d --build web` → HTTP 200、`down` 後に再実行 | 手動 / CI | 成功（2026-11-28: `docker compose down` → `up -d --build web` → `/` と下書き記事が 200、ポートは 127.0.0.1 のみ。初回リクエストはオンデマンドコンパイルで約 3 秒。CI では production イメージのビルドと起動を毎回検証） |
+| H14 | hooks の実イベント発火 | `claude -p` で各イベントを発火させ、`--debug` ログで実行を確認（`--bare` は使わない） | 手動 | 成功（2026-11-28, Claude Code 2.1.283, `claude -p --model haiku --debug-file …`: SessionStart が additionalContext を供給、PreToolUse で guard-command がプロジェクト外削除に ask（-p では拒否扱い）、PostToolUse で post-edit が不正 JSON を block、Stop で stop-check が CI 変更の注意を systemMessage で表示。いずれも debug ログで確認） |
+| H15 | 初期構築中に開発を止めない | スクリプト未作成状態で hooks がエラー停止しない | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`, `tests/harness/post-edit.test.ts`, `tests/harness/session-start.test.ts`） |
 
 ## 2. サイト品質ゲート（SPEC §13・§15）
 
@@ -36,8 +36,8 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 | S4 | 日本語全文検索 | 実際の日本語クエリ（例：「キャッシュ」）で結果と URL を確認 | `tests/e2e/` | 未実施 |
 | S5 | 404 応答 | 存在しない URL で 404 ステータスと 404 ページ（preview / nginx） | `tests/e2e/` | 未実施 |
 | S6 | 本番イメージのビルド | `docker compose --profile preview up -d --build preview` | 手動 / CI | 未実施 |
-| S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/` | 未実施 |
-| S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `tests/e2e/` | 未実施 |
+| S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/contrast.test.ts` | 実施済み（2026-11-28。light/dark の fg・muted・subtle・accent-text × bg/surface/surface-2、callout 文字 × soft 背景、ボタン文字を検証。`subtle` のライト値が surface-2 上で 4.26:1 だったため `#646b7b` に変更。加えて axe-core で `tests/e2e/a11y.spec.ts`（WCAG 2.0/2.1/2.2 A・AA、両テーマ、主要ページ・検索ダイアログ・モバイルドロワー）が違反 0） |
+| S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `scripts/screenshots.mjs` | 一部実施（2026-11-28。home / カテゴリ / 記事 3 本 / 404 を light・dark × desktop・mobile で取得し、qa-engineer が一部を目視。ホームのカテゴリカードで「準備中」が縦に折り返す問題を修正。人間による最終確認は未実施） |
 
 ## 3. 実行結果の記録
 
@@ -45,6 +45,8 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | S7, S8 | docker compose run --rm qa npm run verify（コントラスト unit・axe E2E・キーボード E2E を含む）、`node scripts/screenshots.mjs --dir build-drafts/client …` | Docker Desktop, macOS | 成功 | axe 違反（本文リンクが色のみで区別、スクロール可能な数式にキーボードで到達不可）を修正、`subtle` トークンを調整、ホームの「準備中」折り返しを修正 |
+| 2026-11-28 | H1〜H12, H15 | `docker compose run --rm qa npm run verify -- --quick` / `docker compose run --rm qa npm run verify`（tests/harness 7 ファイル） | Docker Desktop, macOS | 成功 | Phase 4。hook は一時リポジトリ + 偽 docker で実行し、危険コマンドは解析のみ。発見・修正: guard-command が `nice -n 5 rm -rf /` を素通りしていた（値つきオプションを取りこぼし）。qa イメージに git を追加 |
 | 2026-11-28 | H8（実地） | Claude Code セッション中の Stop イベント | Claude Code（ホスト）+ Docker Desktop, macOS | 成功 | 作業中に stop-check が `verify --quick` の Prettier 失敗を検知して停止をブロックした（実イベントでの発火を確認）。並行するサブエージェントの作業途中のファイルを検証した問題が判明し、background_tasks 実行中は保留するよう改善 |
 | 2026-11-28 | H7（実地） | Claude Code セッション中の PreToolUse | 同上 | 成功 | guard-command が実コマンドを停止（heredoc 本文の `.env` 文字列を誤検知 → heredoc 本文を検査対象外に修正。その後 `$(cat .env)` を含むテストコマンドを正しく拒否） |
 | 2026-11-28 | S1 | docker compose run --rm qa npm run verify | Docker Desktop, macOS | 成功 | Phase 2 統合後。E2E 43件、404 の繰り返しテスト 15件も成功 |

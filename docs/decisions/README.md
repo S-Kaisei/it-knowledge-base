@@ -14,6 +14,7 @@
 | [0006](./0006-github-pages-subpath-and-404.md) | GitHub Pages のサブパス配信と 404 | Accepted | 2026-11-28 |
 | [0007](./0007-claude-code-harness-design.md) | Claude Code ハーネスの設計 | Accepted | 2026-11-28 |
 | [0008](./0008-self-hosted-fonts.md) | フォントのセルフホスト | Accepted | 2026-11-28 |
+| [0009](./0009-ci-cd-verified-artifact-deploy.md) | CI/CD：検証済み成果物をそのまま公開する | Accepted | 2026-11-28 |
 
 ## 運用
 

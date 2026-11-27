@@ -18,7 +18,7 @@
   --border: #e3e6ec;
   --fg: #171a21;
   --muted: #565d6d;
-  --subtle: #6b7282;
+  --subtle: #646b7b;
   --accent: #4f46e5;
   --accent-fg: #ffffff;
   --accent-soft: #eef0ff;
@@ -273,6 +273,10 @@
     overflow-x: auto;
     overflow-y: hidden;
     padding: 4px 0;
+  }
+  /* Links inside body text must not rely on color alone (WCAG 1.4.1). */
+  .prose-ikb a {
+    text-decoration: underline;
   }
   .prose-ikb .heading-anchor {
     margin-left: 6px;

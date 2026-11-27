@@ -32,7 +32,9 @@ CMD ["npm", "run", "dev"]
 FROM deps AS qa
 USER root
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# git: tests/harness creates throw-away git repositories to exercise the hooks.
 RUN npx playwright install --with-deps chromium \
+ && apt-get install -y --no-install-recommends git \
  && chmod -R a+rX /ms-playwright \
  && rm -rf /var/lib/apt/lists/*
 USER node

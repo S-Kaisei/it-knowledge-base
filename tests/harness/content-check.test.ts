@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PROJECT_ROOT } from '../../scripts/lib/content.mjs';
 import { validateContent } from '../../scripts/lib/validate.mjs';
 
+// H1 正常系 → 'valid' / H2 → bad-frontmatter, bad-date / H3 → broken-link / H4 → duplicate-slug / H5 → bad-math, bad-mermaid
+// H6（draft 非公開）→ draft-link（ここ）+ tests/e2e/navigation.spec.ts（ルート・sitemap・検索）
 // content:check against fixture content: the valid set passes, each invalid set is rejected with file + line.
 const NOW = '2026-11-28';
 const fixture = (name: string) => path.join(PROJECT_ROOT, 'tests', 'fixtures', 'content', name);
@@ -60,6 +62,13 @@ describe('content:check（fixture）', () => {
     const fm = errors.filter((e) => e.file === 'fundamentals/bad-frontmatter.mdx');
     expect(fm.some((e) => e.message.includes('description'))).toBe(true);
     expect(fm.some((e) => e.message.includes('difficulty'))).toBe(true);
+  }, 60_000);
+
+  it('不正な日付（存在しない日付・未来日）を検出する', async () => {
+    const { errors } = await check('invalid/bad-date');
+    const own = errors.filter((e) => e.file === 'fundamentals/bad-date.mdx');
+    expect(own.length).toBeGreaterThanOrEqual(1);
+    expect(own.some((e) => /lastUpdated|lastVerified|日付/.test(e.message))).toBe(true);
   }, 60_000);
 
   it('公開記事から下書き記事へのリンクと related を検出する', async () => {
