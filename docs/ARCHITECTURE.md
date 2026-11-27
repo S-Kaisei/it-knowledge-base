@@ -117,10 +117,25 @@ layout("routes/article-layout.tsx", [
 
 - Mermaid は prerender 時にはソースをフォールバック表示し、描画失敗時は DOM に `data-mermaid-error` を付与する。
 
-## 6. 検索（Phase 2 で実装予定）
+## 6. 検索（Phase 2 で実装済み）
 
-- Pagefind をビルド後に `build/client` に対して実行。`<html lang="ja">`、記事本文に `data-pagefind-body`。
-- 開発サーバーでは `/pagefind/pagefind.js` が存在しないため、検索 UI に「検索インデックスは本番ビルド後に利用できます」と表示する。
+- Pagefind 1.6.0（Extended、日本語の分かち書き対応）を `npm run build` の最後に `build/client` に対して実行する。
+- 索引対象は記事レイアウトの `<article data-pagefind-body>` のみ。パンくず・記事メタ・インライン目次・関連記事・出典・ページャは `data-pagefind-ignore`。トップ・カテゴリ・404 は body 属性を持たないため索引されない。下書きはビルドされないため索引にも出ない。
+- メタデータ：`title` は記事 h1（`data-pagefind-meta="title"`。`<title>` の「| IT Knowledge Base」は含まない）、`category` はカテゴリ名。
+
+| 層 | ファイル | 役割 |
+| --- | --- | --- |
+| 純粋関数 | `src/lib/search.ts` | 結果 URL → ルーターパス変換、抜粋の `<mark>` だけを扱う安全なパーサー、キー操作のインデックス計算、ショートカット判定、結果の平坦化 |
+| ローダー | `src/components/search/pagefind.ts` | `withBase('/pagefind/pagefind.js')` をブラウザでのみ動的 import（初回オープン時）。開発サーバーでは読み込まず「利用不可」扱い |
+| フック | `src/hooks/use-search.ts` | 遅延ロード、120ms デバウンス、古い応答の破棄、状態（idle / loading / ready / unavailable / error） |
+| UI | `src/components/search/` | `SearchProvider`（ダイアログ 1 つを共有、⌘K / Ctrl+K /「/」）、`SearchTrigger`（ヘッダー）、`HeroSearchButton`（トップ）、`SearchDialog`（Radix Dialog + combobox/listbox） |
+
+- **base path**：Pagefind は自身の配置場所からサイトのベースを推定し、結果 URL を `/it-knowledge-base/network/x/` のように返す（`options({ baseUrl: import.meta.env.BASE_URL })` も明示）。UI は `toRouterPath()` で basename を取り除いたパスを `<Link to>` / `navigate()` に渡し、React Router が basename を付け直す。二重付与や欠落はユニットテストとサブパス E2E で検証する。
+- **抜粋の安全な表示**：`dangerouslySetInnerHTML` は使わない。`parseExcerpt()` が `<mark>` だけを強調区間として認識し（属性は捨てる）、他のタグや文字参照はテキストとして React に渡す。
+- **日本語入力**：IME 変換中（`compositionstart`〜`compositionend`、`isComposing`、keyCode 229）は検索も Enter による遷移も行わない。
+- **アクセシビリティ**：ダイアログ名「サイト内検索」、入力は `role="combobox"` + `aria-activedescendant`、結果は `role="listbox"` / `option`（実体は `<a href>` なので中クリック等も可）、`role="status"` で件数や状態を通知。閉じるとダイアログを開く前の要素へフォーカスを戻す。
+- **開発サーバー**：インデックスが無いため検索 UI に「検索インデックスは本番ビルド後に利用できます（npm run build）」と表示する（404 リクエストもコンソールエラーも発生させない）。
+- テスト：`tests/unit/search.test.ts`、`tests/components/search-dialog.test.tsx`、`tests/e2e/search.spec.ts`（fixture）、`tests/e2e/search-subpath.spec.ts`（subpath プロジェクト）。
 - 詳細は [ADR 0005](./decisions/0005-search-with-pagefind.md)。
 
 ## 7. 配信と 404（Phase 1 で実装予定）
