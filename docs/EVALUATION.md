@@ -61,6 +61,12 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | os-basics / process-and-thread / http-https / system-performance-availability | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | 独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。人間による精読は省略 |
+| 2026-11-28 | system-performance-availability | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | 1回目は major 1（処理時間をレスポンスタイムと呼んでいた）。全数値を再検算 |
+| 2026-11-28 | system-performance-availability | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 9 |
+| 2026-11-28 | http-https | LLM（technical-reviewer、1回目） | 4 | 4 | 5 | 4 | 5 | 公開可 | minor 8（Content-Length、1-RTT の範囲、HSTS の説明など）。難易度を intermediate に変更 |
+| 2026-11-28 | process-and-thread | LLM（technical-reviewer、1回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | minor 7。作例・問題はレビュアーが手計算で再検証 |
+| 2026-11-28 | os-basics | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 公開可（関連記事の存在待ち） | major は関連記事 process-and-thread 未作成のみ（同時公開で解消）。minor 9 を反映 |
 | 2026-11-28 | dns / tcp-ip-basics / virtual-memory / docker | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | オーナーの委任（「どんどん公開していっていいよ」）に基づき、独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。人間による精読は省略 |
 | 2026-11-28 | docker | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 5 | 4 | 公開可 | minor 9（OWASP を出典に追加、非 root 実行の注意などを反映） |
 | 2026-11-28 | virtual-memory | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 公開可 | minor 9。作例・確認問題はレビュアーが手計算で再検証。OSTEP の記述は orchestrator が抽出テキストで照合 |
