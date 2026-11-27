@@ -9,11 +9,39 @@ import path from 'node:path';
 import { emitJson, isInside, isMain, projectDir, readHookInput } from './lib.mjs';
 
 const CONTAINER_ROOT = '/app';
-const SYSTEM_DIRS = ['/etc', '/usr', '/bin', '/sbin', '/lib', '/var', '/opt', '/System', '/Library', '/Applications', '/boot', '/dev', '/proc', '/sys', 'C:\\Windows'];
+const SYSTEM_DIRS = [
+  '/etc',
+  '/usr',
+  '/bin',
+  '/sbin',
+  '/lib',
+  '/var',
+  '/opt',
+  '/System',
+  '/Library',
+  '/Applications',
+  '/boot',
+  '/dev',
+  '/proc',
+  '/sys',
+  'C:\\Windows',
+];
 
 // ---------------------------------------------------------------------------
 // Shell parsing (best effort)
 // ---------------------------------------------------------------------------
+
+/**
+ * Remove here-document bodies (`<<EOF ... EOF`). Their text is data written to a file or stdin,
+ * not commands or file accesses (e.g. writing ".env" into .gitignore). Quoted delimiters
+ * ('EOF') are fully literal; unquoted ones may contain $(...) which we keep for inspection.
+ */
+export function stripHeredocBodies(cmd) {
+  return cmd.replace(/<<-?\s*(['"]?)([A-Za-z_][\w-]*)\1([^\n]*)\n([\s\S]*?)\n[ \t]*\2[ \t]*(?=\n|$)/g, (_m, q, _tag, restOfLine, body) => {
+    const kept = q ? '' : (body.match(/\$\([^()]*\)|`[^`]*`/g) ?? []).join(' ; ');
+    return `__HEREDOC__${restOfLine}${kept ? ` ; ${kept}` : ''}`;
+  });
+}
 
 /** Extract `$(...)` and backtick substitutions (non-nested) as separate commands. */
 function extractSubstitutions(cmd) {
@@ -255,11 +283,14 @@ function checkGh(argv, out) {
   const [, group, action] = argv;
   const args = argv.slice(1);
   if (group === 'repo' && (action === 'delete' || action === 'archive')) out.push({ level: 'deny', reason: 'リポジトリの削除・アーカイブは禁止されています' });
-  else if (group === 'pr' && ['create', 'merge', 'close', 'review', 'comment', 'edit', 'ready'].includes(action)) out.push({ level: 'ask', reason: `gh pr ${action}（GitHub への書き込み）` });
+  else if (group === 'pr' && ['create', 'merge', 'close', 'review', 'comment', 'edit', 'ready'].includes(action))
+    out.push({ level: 'ask', reason: `gh pr ${action}（GitHub への書き込み）` });
   else if (group === 'release' && action !== 'list' && action !== 'view') out.push({ level: 'ask', reason: 'GitHub Release の操作' });
-  else if (group === 'workflow' && (action === 'run' || action === 'enable' || action === 'disable')) out.push({ level: 'ask', reason: 'GitHub Actions ワークフローの実行・変更（デプロイの可能性）' });
+  else if (group === 'workflow' && (action === 'run' || action === 'enable' || action === 'disable'))
+    out.push({ level: 'ask', reason: 'GitHub Actions ワークフローの実行・変更（デプロイの可能性）' });
   else if (group === 'secret' || group === 'variable') out.push({ level: 'ask', reason: 'GitHub のシークレット・変数の操作' });
-  else if (group === 'issue' && ['create', 'close', 'comment', 'edit', 'delete'].includes(action)) out.push({ level: 'ask', reason: `gh issue ${action}（GitHub への書き込み）` });
+  else if (group === 'issue' && ['create', 'close', 'comment', 'edit', 'delete'].includes(action))
+    out.push({ level: 'ask', reason: `gh issue ${action}（GitHub への書き込み）` });
   else if (group === 'api') {
     const methodIdx = args.findIndex((a) => a === '-X' || a === '--method');
     const method = methodIdx >= 0 ? (args[methodIdx + 1] ?? '').toUpperCase() : args.some((a) => /^-[fF]$|^--(raw-)?field$|^--input$/.test(a)) ? 'POST' : 'GET';
@@ -274,21 +305,46 @@ function checkDockerRunFlags(args, ctx, out) {
     const a = args[i];
     if (a === '--privileged' || a.startsWith('--privileged=')) out.push({ level: 'deny', reason: '特権コンテナ（--privileged）は禁止されています' });
     if (a === '--cap-add' || a.startsWith('--cap-add=')) out.push({ level: 'deny', reason: 'capability の追加は禁止されています' });
-    if (/^--(pid|ipc|uts|userns)(=|$)/.test(a) && /host/.test(`${a} ${args[i + 1] ?? ''}`)) out.push({ level: 'deny', reason: 'ホスト名前空間の共有は禁止されています' });
+    if (/^--(pid|ipc|uts|userns)(=|$)/.test(a) && /host/.test(`${a} ${args[i + 1] ?? ''}`))
+      out.push({ level: 'deny', reason: 'ホスト名前空間の共有は禁止されています' });
     if (a === '--device' || a.startsWith('--device=')) out.push({ level: 'deny', reason: 'ホストデバイスの割り当ては禁止されています' });
-    if (/^--security-opt/.test(a) && /unconfined|disable/.test(`${a} ${args[i + 1] ?? ''}`)) out.push({ level: 'deny', reason: 'セキュリティプロファイルの無効化は禁止されています' });
+    if (/^--security-opt/.test(a) && /unconfined|disable/.test(`${a} ${args[i + 1] ?? ''}`))
+      out.push({ level: 'deny', reason: 'セキュリティプロファイルの無効化は禁止されています' });
     if (a === '-v' || a === '--volume' || a === '--mount' || a.startsWith('--volume=') || a.startsWith('--mount=') || a.startsWith('-v')) {
-      const spec = a.includes('=') ? a.split('=').slice(1).join('=') : a.length > 2 && a.startsWith('-v') ? a.slice(2) : args[i + 1] ?? '';
-      const src = expandHome(spec.startsWith('type=') || spec.includes('source=') || spec.includes('src=') ? (spec.match(/(?:source|src)=([^,]+)/)?.[1] ?? '') : spec.split(':')[0], ctx.home);
+      const spec = a.includes('=') ? a.split('=').slice(1).join('=') : a.length > 2 && a.startsWith('-v') ? a.slice(2) : (args[i + 1] ?? '');
+      const src = expandHome(
+        spec.startsWith('type=') || spec.includes('source=') || spec.includes('src=') ? (spec.match(/(?:source|src)=([^,]+)/)?.[1] ?? '') : spec.split(':')[0],
+        ctx.home,
+      );
       if (src.includes('docker.sock')) out.push({ level: 'deny', reason: 'Docker ソケットのマウントは禁止されています' });
-      else if (src && DANGEROUS_MOUNT_SOURCES(ctx.home).includes(path.resolve(src))) out.push({ level: 'deny', reason: `ホストの広範囲ディレクトリのマウント: ${src}` });
+      else if (src && DANGEROUS_MOUNT_SOURCES(ctx.home).includes(path.resolve(src)))
+        out.push({ level: 'deny', reason: `ホストの広範囲ディレクトリのマウント: ${src}` });
     }
   }
 }
 
 /** Parse `docker compose exec|run [opts] service cmd...` → inner argv (or null). */
 function composeInner(sub, args) {
-  const withValue = new Set(['-e', '--env', '-u', '--user', '-w', '--workdir', '--index', '--name', '--entrypoint', '-p', '--publish', '-v', '--volume', '-l', '--label', '--cap-add', '--cap-drop', '--pull']);
+  const withValue = new Set([
+    '-e',
+    '--env',
+    '-u',
+    '--user',
+    '-w',
+    '--workdir',
+    '--index',
+    '--name',
+    '--entrypoint',
+    '-p',
+    '--publish',
+    '-v',
+    '--volume',
+    '-l',
+    '--label',
+    '--cap-add',
+    '--cap-drop',
+    '--pull',
+  ]);
   let i = 0;
   let workdir;
   while (i < args.length && args[i].startsWith('-')) {
@@ -310,15 +366,22 @@ function checkDocker(argv, ctx, out, depth) {
   }
   if (compose) {
     // drop global compose options
-    while (args.length && args[0].startsWith('-')) args = args.slice(['-f', '--file', '-p', '--project-name', '--profile', '--env-file', '--project-directory'].includes(args[0]) ? 2 : 1);
+    while (args.length && args[0].startsWith('-'))
+      args = args.slice(['-f', '--file', '-p', '--project-name', '--profile', '--env-file', '--project-directory'].includes(args[0]) ? 2 : 1);
     const [sub, ...rest] = args;
-    if (sub === 'down' && rest.some((a) => a === '-v' || a === '--volumes' || a === '--rmi')) out.push({ level: 'ask', reason: 'docker compose down -v はボリューム（node_modules 等）を削除します' });
+    if (sub === 'down' && rest.some((a) => a === '-v' || a === '--volumes' || a === '--rmi'))
+      out.push({ level: 'ask', reason: 'docker compose down -v はボリューム（node_modules 等）を削除します' });
     if (sub === 'rm' && rest.some((a) => a === '-v' || a === '--volumes')) out.push({ level: 'ask', reason: 'ボリュームの削除' });
     if (sub === 'run') checkDockerRunFlags(rest, ctx, out);
     if (sub === 'exec' || sub === 'run') {
       const parsed = composeInner(sub, rest);
       if (parsed && parsed.inner.length) {
-        evaluateCommandString(parsed.inner.map(quoteArg).join(' '), { ...ctx, container: true, containerCwd: parsed.workdir ?? CONTAINER_ROOT }, out, depth + 1);
+        evaluateCommandString(
+          parsed.inner.map(quoteArg).join(' '),
+          { ...ctx, container: true, containerCwd: parsed.workdir ?? CONTAINER_ROOT },
+          out,
+          depth + 1,
+        );
       }
     }
     return;
@@ -375,7 +438,7 @@ function checkSegment(rawArgv, ctx, out, depth) {
       checkRm(argv, ctx, out);
       break;
     case 'find':
-      if (argv.includes('-delete') || argv.includes('-exec') && argv.some((a) => a === 'rm')) {
+      if (argv.includes('-delete') || (argv.includes('-exec') && argv.some((a) => a === 'rm'))) {
         const start = argv[1] && !argv[1].startsWith('-') ? argv[1] : '.';
         const r = classifyDeleteTarget(start, ctx);
         // Filtered deletes inside the project are routine (e.g. removing *.tmp); only the scope matters.
@@ -414,7 +477,12 @@ function checkSegment(rawArgv, ctx, out, depth) {
     case 'wget':
     case 'http':
     case 'xh': {
-      const upload = argv.some((a) => /^(-d|--data.*|-F|--form.*|-T|--upload-file|--post-data|--post-file|--body-data|--body-file)$/.test(a) || /^-[a-zA-Z]*[dFT]$/.test(a) && a.length <= 3) || /-X\s*(POST|PUT|PATCH|DELETE)|--request\s*(POST|PUT|PATCH|DELETE)|--method=(POST|PUT|PATCH|DELETE)/i.test(joined);
+      const upload =
+        argv.some(
+          (a) =>
+            /^(-d|--data.*|-F|--form.*|-T|--upload-file|--post-data|--post-file|--body-data|--body-file)$/.test(a) ||
+            (/^-[a-zA-Z]*[dFT]$/.test(a) && a.length <= 3),
+        ) || /-X\s*(POST|PUT|PATCH|DELETE)|--request\s*(POST|PUT|PATCH|DELETE)|--method=(POST|PUT|PATCH|DELETE)/i.test(joined);
       if (upload) out.push({ level: 'ask', reason: '外部へのデータ送信の可能性（curl/wget のアップロード）' });
       break;
     }
@@ -476,7 +544,7 @@ function evaluateCommandString(command, ctx, out, depth = 0) {
     out.push({ level: 'ask', reason: 'ネストが深すぎるコマンド' });
     return;
   }
-  const { rest, subs } = extractSubstitutions(command);
+  const { rest, subs } = extractSubstitutions(stripHeredocBodies(command));
   for (const s of subs) evaluateCommandString(s, ctx, out, depth + 1);
   const segments = splitSegments(rest);
   for (const seg of segments) checkSegment(seg, ctx, out, depth);
@@ -548,6 +616,12 @@ async function main() {
 if (isMain(import.meta.url)) {
   main().catch((err) => {
     // Unexpected failure: ask rather than silently allow.
-    emitJson({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: `[guard-command] フックの内部エラー: ${err?.message ?? err}` } });
+    emitJson({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'ask',
+        permissionDecisionReason: `[guard-command] フックの内部エラー: ${err?.message ?? err}`,
+      },
+    });
   });
 }

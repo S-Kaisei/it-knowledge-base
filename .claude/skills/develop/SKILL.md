@@ -47,7 +47,7 @@ argument-hint: "<実装・修正したい内容>"
 
 ## 7. Report
 
-```
+```text
 ## Summary
 ## 変更ファイル
 ## 追加・更新したテスト

@@ -1,0 +1,54 @@
+---
+title: テスト用記事（基礎）
+description: E2E とハーネステスト用の固定記事です。本番コンテンツではありません。
+slug: fixture-basics
+category: fundamentals
+difficulty: beginner
+tags: [fixture, テスト]
+prerequisites: []
+related: [fixture-advanced]
+order: 1
+draft: false
+lastUpdated: 2026-11-28
+lastVerified: 2026-11-28
+references:
+  - title: MDN Web Docs
+    url: https://developer.mozilla.org/ja/
+    publisher: Mozilla
+    accessed: 2026-11-28
+---
+
+## 概要
+
+この記事は検索テスト用の固有語「キャッシュヒット率」を含みます。[応用編](/fundamentals/fixture-advanced/)や[ネットワーク編](/network/fixture-network/)へリンクします。
+
+### 小見出し
+
+| 項目 | 値 |
+| --- | --- |
+| 記憶装置 | レジスタ |
+
+## 数式
+
+インライン数式 $E = h \times T_c + (1 - h) \times T_m$ を含みます。
+
+$$
+\text{実効アクセス時間} = h T_c + (1 - h) T_m
+$$
+
+## コード
+
+```ts title="example.ts"
+export function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+## 図解
+
+```mermaid
+flowchart LR
+  CPU --> Cache --> Memory
+```
+
+図は CPU、キャッシュ、メモリの順にデータを探す流れを表します。

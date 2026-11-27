@@ -1,0 +1,14 @@
+build/
+build-subpath/
+build-e2e/
+build-e2e-subpath/
+.react-router/
+src/generated/
+node_modules/
+test-results/
+playwright-report/
+coverage/
+package-lock.json
+# Prose is formatted by Markdownlint rules, not Prettier (Japanese line breaks / MDX JSX are preserved as written)
+*.md
+*.mdx

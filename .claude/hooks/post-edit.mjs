@@ -106,7 +106,10 @@ export function checkFile(rel, text) {
           if (fm.keys[k] && !/^\d{4}-\d{2}-\d{2}$/.test(fm.keys[k])) errors.push(`${k} は YYYY-MM-DD 形式で記述してください`);
         }
         const draft = fm.keys.draft === 'true';
-        const body = lines.slice(startLine).filter((_, i) => !inFence[i + startLine]).join('\n');
+        const body = lines
+          .slice(startLine)
+          .filter((_, i) => !inFence[i + startLine])
+          .join('\n');
         if (PLACEHOLDER_RE.test(body)) {
           (draft ? warnings : errors).push(`未完成のプレースホルダー（TODO 等）が残っています${draft ? '（draft のため警告のみ）' : ''}`);
         }
@@ -156,7 +159,10 @@ async function main() {
   }
 
   if (errors.length) {
-    emitJson({ decision: 'block', reason: `[post-edit] ${rel} に問題があります:\n- ${errors.join('\n- ')}${warnings.length ? `\n（警告）\n- ${warnings.join('\n- ')}` : ''}` });
+    emitJson({
+      decision: 'block',
+      reason: `[post-edit] ${rel} に問題があります:\n- ${errors.join('\n- ')}${warnings.length ? `\n（警告）\n- ${warnings.join('\n- ')}` : ''}`,
+    });
   } else if (warnings.length) {
     emitJson({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: `[post-edit] ${rel} の警告:\n- ${warnings.join('\n- ')}` } });
   }

@@ -1,0 +1,22 @@
+{
+  // Markdown/MDX style. Long Japanese lines are normal, so line-length (MD013) is disabled.
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD033": false,
+    "MD041": false,
+    "MD060": false,
+  },
+  "globs": ["**/*.md", "**/*.mdx"],
+  "ignores": [
+    "node_modules/**",
+    "build/**",
+    "build-subpath/**",
+    "build-e2e/**",
+    "build-e2e-subpath/**",
+    "test-results/**",
+    "playwright-report/**",
+    "tests/fixtures/content/invalid/**",
+  ],
+}

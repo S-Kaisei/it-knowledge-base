@@ -1,0 +1,110 @@
+[
+  {
+    "slug": "fundamentals",
+    "name": "IT基礎",
+    "nameEn": "Fundamentals",
+    "description": "コンピュータを構成するハードウェアとソフトウェア、性能の考え方を学びます。",
+    "topics": "CPU・メモリ・OS・性能",
+    "icon": "cpu",
+    "order": 1
+  },
+  {
+    "slug": "computer-science",
+    "name": "コンピュータサイエンス",
+    "nameEn": "Computer Science",
+    "description": "進数や論理演算から、データ構造・アルゴリズム・計算量までを扱います。",
+    "topics": "進数・論理演算・アルゴリズム",
+    "icon": "binary",
+    "order": 2
+  },
+  {
+    "slug": "network",
+    "name": "ネットワーク",
+    "nameEn": "Network",
+    "description": "データがネットワークを通じて届く仕組みを、階層モデルとプロトコルから理解します。",
+    "topics": "TCP/IP・DNS・HTTP",
+    "icon": "globe",
+    "order": 3
+  },
+  {
+    "slug": "security",
+    "name": "セキュリティ",
+    "nameEn": "Security",
+    "description": "情報を守るための考え方と、認証・暗号・通信保護の仕組みを学びます。",
+    "topics": "認証・暗号・TLS",
+    "icon": "shield",
+    "order": 4
+  },
+  {
+    "slug": "database",
+    "name": "データベース",
+    "nameEn": "Database",
+    "description": "データを正しく速く扱うための設計と、トランザクションの仕組みを学びます。",
+    "topics": "SQL・正規化・トランザクション",
+    "icon": "database",
+    "order": 5
+  },
+  {
+    "slug": "programming",
+    "name": "プログラミング",
+    "nameEn": "Programming",
+    "description": "言語に依存しないプログラミングの基本概念と設計の考え方を扱います。",
+    "topics": "型・関数・非同期・テスト",
+    "icon": "code",
+    "order": 6
+  },
+  {
+    "slug": "web",
+    "name": "Web技術",
+    "nameEn": "Web",
+    "description": "ブラウザとサーバーがやり取りする仕組みと、Webアプリケーションの構成を学びます。",
+    "topics": "HTTP・ブラウザ・React",
+    "icon": "app-window",
+    "order": 7
+  },
+  {
+    "slug": "cloud",
+    "name": "クラウド・インフラ",
+    "nameEn": "Cloud",
+    "description": "サーバー、仮想化、コンテナからクラウドサービスまで、システムの土台を学びます。",
+    "topics": "仮想化・Docker・CDN",
+    "icon": "cloud",
+    "order": 8
+  },
+  {
+    "slug": "ai",
+    "name": "AI・機械学習",
+    "nameEn": "AI",
+    "description": "機械学習の基礎から、大規模言語モデルとAIエージェントの仕組みまでを扱います。",
+    "topics": "LLM・RAG・エージェント",
+    "icon": "bot",
+    "order": 9
+  },
+  {
+    "slug": "architecture",
+    "name": "システム設計",
+    "nameEn": "Architecture",
+    "description": "可用性や拡張性を満たすシステムの構成と、その設計判断を学びます。",
+    "topics": "可用性・分散システム",
+    "icon": "layout-grid",
+    "order": 10
+  },
+  {
+    "slug": "devops",
+    "name": "開発・運用",
+    "nameEn": "DevOps",
+    "description": "ソフトウェアを継続的に届け、安定して動かし続けるための仕組みを学びます。",
+    "topics": "Git・CI/CD・SRE",
+    "icon": "git-branch",
+    "order": 11
+  },
+  {
+    "slug": "management",
+    "name": "ITマネジメント",
+    "nameEn": "Management",
+    "description": "要件定義からプロジェクト管理、IT戦略、監査までを扱います。",
+    "topics": "要件定義・PM・監査",
+    "icon": "briefcase",
+    "order": 12
+  }
+]
