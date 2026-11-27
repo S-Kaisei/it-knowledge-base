@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { Route } from './+types/home';
+import { HeroSearchButton } from '~/components/search/search-trigger';
 import { CategoryIcon } from '~/components/ui/category-icon';
 import { contentIndex, recentArticles } from '~/lib/content';
 import { SITE, pageTitle } from '~/lib/site';
@@ -21,6 +22,7 @@ export default function Home() {
         <p className="font-mono text-[12.5px] tracking-[0.04em] text-accent-text">IT KNOWLEDGE BASE</p>
         <h1 className="mt-2 mb-2.5 text-[clamp(30px,5vw,44px)] leading-tight font-bold tracking-tight">{SITE.tagline}</h1>
         <p className="mb-5 max-w-[560px] text-[17px] text-muted">{SITE.description}</p>
+        <HeroSearchButton />
       </section>
 
       <div className="mt-9 mb-3.5 flex items-baseline justify-between gap-3">

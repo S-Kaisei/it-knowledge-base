@@ -64,7 +64,9 @@ export default function ArticleLayout() {
             </p>
           ) : null}
 
-          <h1 className="mt-3.5 mb-3 text-[clamp(28px,4vw,36px)] leading-[1.3] font-bold tracking-[-0.015em]">{article.title}</h1>
+          <h1 data-pagefind-meta="title" className="mt-3.5 mb-3 text-[clamp(28px,4vw,36px)] leading-[1.3] font-bold tracking-[-0.015em]">
+            {article.title}
+          </h1>
           <p className="mb-4.5 text-[17px] text-muted">{article.description}</p>
           <div
             className="flex flex-wrap items-center gap-x-3.5 gap-y-2 border-b border-border pb-6 text-[13px] leading-snug text-subtle"
@@ -85,7 +87,9 @@ export default function ArticleLayout() {
             ) : null}
           </div>
 
-          <InlineTableOfContents items={article.toc} />
+          <div data-pagefind-ignore="">
+            <InlineTableOfContents items={article.toc} />
+          </div>
 
           <div className="prose-ikb mt-7">
             <MDXProvider components={mdxComponents}>
