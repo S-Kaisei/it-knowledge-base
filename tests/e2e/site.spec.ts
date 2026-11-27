@@ -4,8 +4,12 @@ import { hasHorizontalOverflow, trackErrors } from './helpers';
 // Health check of the REAL site build (build/client): every URL in sitemap.xml renders without errors.
 test('実サイトの全公開ページがエラーなく表示される', async ({ page, request }) => {
   const sitemap = await (await request.get('/sitemap.xml')).text();
-  const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1] ?? '/').pathname);
-  expect(paths.length).toBeGreaterThan(0);
+  // <loc> values are absolute URLs built from SITE_URL (in CI: the GitHub Pages URL with /it-knowledge-base/),
+  // while this build is served at "/". The first entry is the home page, so its path is the site's base.
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1] ?? '/').pathname);
+  expect(locs.length).toBeGreaterThan(0);
+  const sitemapBase = locs[0] ?? '/';
+  const paths = locs.map((p) => `/${p.slice(sitemapBase.length)}`);
   for (const path of paths) {
     const t = trackErrors(page);
     const res = await page.goto(path);
