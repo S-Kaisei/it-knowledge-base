@@ -20,7 +20,10 @@ test.describe('全文検索（Pagefind）', () => {
     // Title comes from the article h1 (not the <title> suffix); category meta and <mark> highlight are shown.
     await expect(option).not.toContainText('IT Knowledge Base');
     await expect(option).toContainText('IT基礎');
-    await expect(option.locator('mark').first()).toHaveText(/キャッシュヒット率/);
+    // Pagefind segments the query into words (キャッシュ / ヒット率) and highlights each of them.
+    await expect(option.locator('mark').first()).toHaveText(/キャッシュ|ヒット率/);
+    // The heading-level sub-result highlights the whole term.
+    await expect(dialog.locator('mark', { hasText: 'キャッシュヒット率' }).first()).toBeVisible();
     await expect(dialog.getByRole('status')).toContainText(/\d+件の記事が見つかりました/);
     await option.click();
     await expect(page).toHaveURL(/\/fundamentals\/fixture-basics\/$/);

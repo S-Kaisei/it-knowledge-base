@@ -5,7 +5,9 @@ export function trackErrors(page: Page) {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(`console: ${msg.text()}`);
+    // "Failed to load resource" duplicates HTTP failures without the URL; those are tracked (with URL)
+    // by the response listener below, and a 404 document status is asserted by the 404 tests themselves.
+    if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource')) errors.push(`console: ${msg.text()}`);
   });
   page.on('response', (res) => {
     const url = new URL(res.url());

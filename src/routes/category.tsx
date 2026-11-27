@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, useMatches } from 'react-router';
 import type { Route } from './+types/category';
 import { DifficultyBadge } from '~/components/article/difficulty-badge';
 import { CategoryIcon } from '~/components/ui/category-icon';
@@ -6,14 +6,20 @@ import { articlesInCategory, getCategory } from '~/lib/content';
 import { pageTitle } from '~/lib/site';
 import { NotFoundContent } from './not-found';
 
-export const meta: Route.MetaFunction = ({ params }) => {
-  const c = getCategory(params.category);
+/** Category slug from the route id ("category/<slug>") set in src/routes.ts. */
+function slugFromMatches(matches: ReadonlyArray<{ id: string } | undefined>): string | undefined {
+  const id = [...matches].reverse().find((m) => m?.id.startsWith('category/'))?.id;
+  return id?.slice('category/'.length);
+}
+
+export const meta: Route.MetaFunction = ({ matches, location }) => {
+  const c = getCategory(slugFromMatches(matches) ?? location.pathname.split('/').filter(Boolean)[0]);
   if (!c) return [{ title: pageTitle('ページが見つかりません') }, { name: 'robots', content: 'noindex' }];
   return [{ title: pageTitle(c.name) }, { name: 'description', content: c.description }];
 };
 
-export default function CategoryPage({ params }: Route.ComponentProps) {
-  const category = getCategory(params.category);
+export default function CategoryPage() {
+  const category = getCategory(slugFromMatches(useMatches()));
   if (!category) return <NotFoundContent />;
   const articles = articlesInCategory(category.slug);
 

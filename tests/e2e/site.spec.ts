@@ -18,7 +18,12 @@ test('実サイトの全公開ページがエラーなく表示される', async
 });
 
 test('実サイトの 404 ページ', async ({ page }) => {
+  const t = trackErrors(page);
   const res = await page.goto('/this-page-does-not-exist/');
   expect(res?.status()).toBe(404);
+  await expect(page.getByTestId('not-found')).toHaveCount(1);
   await expect(page.getByTestId('not-found')).toBeVisible();
+  // Hydration of 404.html at an unrelated URL must not raise errors (e.g. hydration mismatch).
+  await page.waitForLoadState('networkidle');
+  t.expectNone();
 });
