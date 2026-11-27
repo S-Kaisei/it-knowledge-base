@@ -19,11 +19,11 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 | H7 | 危険コマンドの制限 | `guard-command.mjs` に危険コマンドの PreToolUse 入力を与え `deny` / `ask` を確認 | `tests/harness/` | 成功（`tests/harness/guard-command.test.ts`（deny / ask / 許可、heredoc、サブプロセス）） |
 | H8 | Stop hook が失敗を検知 | 検証失敗状態で `stop-check.mjs` が block を返す | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（一時 repo + 偽 docker）） |
 | H9 | Stop hook の無限ループ防止 | `stop_hook_active: true` と試行カウンタ上限で block しないことを確認 | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（stop_hook_active、MAX_ATTEMPTS）） |
-| H10 | 読み取り専用レビュー | reviewer 系エージェントの `tools` に Edit / Write / Bash がないことを静的検査 + 実セッションで編集不可を確認 | `tests/harness/` | 成功（`tests/harness/agents-readonly.test.ts`（静的検査。実セッションでの編集不可確認は未実施）, `tests/harness/settings.test.ts`） |
+| H10 | 読み取り専用レビュー | reviewer 系エージェントの `tools` に Edit / Write / Bash がないことを静的検査 + 実セッションで編集不可を確認 | `tests/harness/` | 成功（静的: `tests/harness/agents-readonly.test.ts`, `tests/harness/settings.test.ts`。実セッション: 2026-11-28 に technical-reviewer を 6 回起動し、いずれも Read/Grep/Glob/WebFetch/WebSearch のみで作業を完了、作業ツリーへの変更なし。ツールに Edit/Write/Bash が無いため編集を試みることもできない構成） |
 | H11 | Docker 不可時の報告 | Docker 不在をシミュレートし、Stop hook が失敗ではなく「未検証」を報告 | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`, `tests/harness/session-start.test.ts`（偽 docker で不可をシミュレート）） |
 | H12 | 変更なしで不要な検証をしない | クリーンな作業ツリーで Stop hook が検証をスキップ | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`（docker 呼び出し 0 回を確認）） |
-| H13 | Compose 起動の再現性 | クリーン状態から `docker compose up -d --build web` → HTTP 200、`down` 後に再実行 | 手動 / CI | 未実施 |
-| H14 | hooks の実イベント発火 | `claude -p` で各イベントを発火させ、`--debug` ログで実行を確認（`--bare` は使わない） | 手動 | 未実施 |
+| H13 | Compose 起動の再現性 | クリーン状態から `docker compose up -d --build web` → HTTP 200、`down` 後に再実行 | 手動 / CI | 成功（2026-11-28: `docker compose down` → `up -d --build web` → `/` と下書き記事が 200、ポートは 127.0.0.1 のみ。初回リクエストはオンデマンドコンパイルで約 3 秒。CI では production イメージのビルドと起動を毎回検証） |
+| H14 | hooks の実イベント発火 | `claude -p` で各イベントを発火させ、`--debug` ログで実行を確認（`--bare` は使わない） | 手動 | 成功（2026-11-28, Claude Code 2.1.283, `claude -p --model haiku --debug-file …`: SessionStart が additionalContext を供給、PreToolUse で guard-command がプロジェクト外削除に ask（-p では拒否扱い）、PostToolUse で post-edit が不正 JSON を block、Stop で stop-check が CI 変更の注意を systemMessage で表示。いずれも debug ログで確認） |
 | H15 | 初期構築中に開発を止めない | スクリプト未作成状態で hooks がエラー停止しない | `tests/harness/` | 成功（`tests/harness/stop-check.test.ts`, `tests/harness/post-edit.test.ts`, `tests/harness/session-start.test.ts`） |
 
 ## 2. サイト品質ゲート（SPEC §13・§15）
