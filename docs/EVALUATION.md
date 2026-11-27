@@ -45,6 +45,7 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | CI・デプロイ（S1・S3・S5・S6） | GitHub Actions `CI`（run 46053095896）→ `Deploy to GitHub Pages`（run 46053347607）、公開 URL へのブラウザ確認 | GitHub Actions（ubuntu-24.04）, https://s-kaisei.github.io/it-knowledge-base/ | 成功 | 初回 CI（run 46052578454）は E2E 失敗（CI の SITE_URL でサイトマップがサブパス付きになり、ルート配信を検査する site.spec が 404）。修正後に成功し、失敗時はデプロイが skipped になることも確認。公開サイトで / ・カテゴリ 200、未知 URL 404、アセットはサブパス付き、JS エラーなし、モバイルで横スクロールなし。記事 3 本は draft のため未公開 |
 | 2026-11-28 | bun 移行（S1・H8） | `docker compose run --rm qa bun run verify`、`echo '{…}' \| node .claude/hooks/stop-check.mjs`、`docker compose --profile preview up -d --build preview` | Docker Desktop, macOS | 成功 | npm → bun 1.4.5（ADR-0010）。verify 12 段階・unit/harness 269・components 41・E2E 全件成功。実 web コンテナでの Stop フック（`bun run verify -- --quick`）も通過。移行中に web イメージに git が無く Stop フックのゲートが常に失敗する既存の問題（Phase 4 で harness テスト追加以降）を発見し、base ステージに git を導入して解消 |
 | 2026-11-28 | S7, S8 | docker compose run --rm qa npm run verify（コントラスト unit・axe E2E・キーボード E2E を含む）、`node scripts/screenshots.mjs --dir build-drafts/client …` | Docker Desktop, macOS | 成功 | axe 違反（本文リンクが色のみで区別、スクロール可能な数式にキーボードで到達不可）を修正、`subtle` トークンを調整、ホームの「準備中」折り返しを修正 |
 | 2026-11-28 | H1〜H12, H15 | `docker compose run --rm qa npm run verify -- --quick` / `docker compose run --rm qa npm run verify`（tests/harness 7 ファイル） | Docker Desktop, macOS | 成功 | Phase 4。hook は一時リポジトリ + 偽 docker で実行し、危険コマンドは解析のみ。発見・修正: guard-command が `nice -n 5 rm -rf /` を素通りしていた（値つきオプションを取りこぼし）。qa イメージに git を追加 |
@@ -75,8 +76,6 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 ### 未検証
 
-- **CI（GitHub Actions）は未実行**：リポジトリへ push していないため、`ci.yml` の verify / Docker ジョブ（nginx スモークテスト含む）は GitHub 上で一度も動いていない（S5 の nginx 部分、S6）。
-- **GitHub Pages へのデプロイは未実行**：`deploy.yml` はリポジトリ変数 `PAGES_DEPLOY_ENABLED=true` を所有者が設定するまで無効。公開 URL での確認も未実施。
 - **3 記事は人間レビュー未実施**：`cpu` / `memory-and-storage` / `cache-memory` は LLM レビューのみで、すべて `draft: true`。表示の人間による最終確認（S8）も未実施。
 - **出典の一部が未確認**：
   - アムダール（Amdahl, 1967）の原論文の書誌情報（掲載誌・ページ等）は未確認（`cpu` 記事は講義ノートを出典としている）。
