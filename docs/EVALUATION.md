@@ -36,8 +36,8 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 | S4 | 日本語全文検索 | 実際の日本語クエリ（例：「キャッシュ」）で結果と URL を確認 | `tests/e2e/` | 未実施 |
 | S5 | 404 応答 | 存在しない URL で 404 ステータスと 404 ページ（preview / nginx） | `tests/e2e/` | 未実施 |
 | S6 | 本番イメージのビルド | `docker compose --profile preview up -d --build preview` | 手動 / CI | 未実施 |
-| S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/` | 未実施 |
-| S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `tests/e2e/` | 未実施 |
+| S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/contrast.test.ts` | 実施済み（2026-11-28。light/dark の fg・muted・subtle・accent-text × bg/surface/surface-2、callout 文字 × soft 背景、ボタン文字を検証。`subtle` のライト値が surface-2 上で 4.26:1 だったため `#646b7b` に変更。加えて axe-core で `tests/e2e/a11y.spec.ts`（WCAG 2.0/2.1/2.2 A・AA、両テーマ、主要ページ・検索ダイアログ・モバイルドロワー）が違反 0） |
+| S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `scripts/screenshots.mjs` | 一部実施（2026-11-28。home / カテゴリ / 記事 3 本 / 404 を light・dark × desktop・mobile で取得し、qa-engineer が一部を目視。ホームのカテゴリカードで「準備中」が縦に折り返す問題を修正。人間による最終確認は未実施） |
 
 ## 3. 実行結果の記録
 
@@ -45,6 +45,7 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | S7, S8 | docker compose run --rm qa npm run verify（コントラスト unit・axe E2E・キーボード E2E を含む）、`node scripts/screenshots.mjs --dir build-drafts/client …` | Docker Desktop, macOS | 成功 | axe 違反（本文リンクが色のみで区別、スクロール可能な数式にキーボードで到達不可）を修正、`subtle` トークンを調整、ホームの「準備中」折り返しを修正 |
 | 2026-11-28 | H8（実地） | Claude Code セッション中の Stop イベント | Claude Code（ホスト）+ Docker Desktop, macOS | 成功 | 作業中に stop-check が `verify --quick` の Prettier 失敗を検知して停止をブロックした（実イベントでの発火を確認）。並行するサブエージェントの作業途中のファイルを検証した問題が判明し、background_tasks 実行中は保留するよう改善 |
 | 2026-11-28 | H7（実地） | Claude Code セッション中の PreToolUse | 同上 | 成功 | guard-command が実コマンドを停止（heredoc 本文の `.env` 文字列を誤検知 → heredoc 本文を検査対象外に修正。その後 `$(cat .env)` を含むテストコマンドを正しく拒否） |
 | 2026-11-28 | S1 | docker compose run --rm qa npm run verify | Docker Desktop, macOS | 成功 | Phase 2 統合後。E2E 43件、404 の繰り返しテスト 15件も成功 |
