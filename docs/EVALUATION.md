@@ -61,6 +61,13 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | dns / tcp-ip-basics / virtual-memory / docker | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | オーナーの委任（「どんどん公開していっていいよ」）に基づき、独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。人間による精読は省略 |
+| 2026-11-28 | docker | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 5 | 4 | 公開可 | minor 9（OWASP を出典に追加、非 root 実行の注意などを反映） |
+| 2026-11-28 | virtual-memory | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 公開可 | minor 9。作例・確認問題はレビュアーが手計算で再検証。OSTEP の記述は orchestrator が抽出テキストで照合 |
+| 2026-11-28 | tcp-ip-basics | LLM（technical-reviewer、2回目） | 4 | 4 | 4 | 4 | 5 | 公開可 | 1回目は major 1（エフェメラルポートの範囲）。IPA シラバスの記述は orchestrator が抽出テキストで確認 |
+| 2026-11-28 | tcp-ip-basics | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 9 |
+| 2026-11-28 | dns | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | 1回目は major 1（ルートサーバーの規模の誤り）。minor を反映 |
+| 2026-11-28 | dns | LLM（technical-reviewer、1回目） | 4 | 4 | 5 | 4 | 4 | 要修正 | major 1・minor 11 |
 | 2026-11-28 | cpu / memory-and-storage / cache-memory | 人間（オーナー） | — | — | — | — | — | 公開承認 | オーナーが公開を承認（「どんどん公開していっていいよ」）。記事内容の人間による精読は省略し、LLM の独立レビュー 2 回（最終で全軸 4 点以上・blocker なし）と全品質ゲートの通過を公開条件とした。`draft: false` に変更 |
 | 2026-11-28 | cache-memory | LLM（technical-reviewer、2回目） | 4 | 4 | 4 | 4 | 4 | 要修正（軽微） | 1回目の major（実効アクセス時間の減り方の誤記）を修正済み。2回目の major（R6春 問10 からの一般化）は最終仕上げで対応 |
 | 2026-11-28 | memory-and-storage | LLM（technical-reviewer、2回目） | 4 | 4 | 4 | 4 | 4 | 要修正（軽微） | 1回目の major（キャッシュの位置の誤り、理解度チェックが IPA サンプル問題と同構成）を修正済み |
