@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# build output
+build/
+.react-router/
+src/generated/
+
+# test output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# local / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Claude Code (personal settings and hook state are not shared)
+.claude/settings.local.json
+.claude/.state/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
