@@ -25,6 +25,8 @@ CSS カスタムプロパティとして `src/styles/` に定義し、Tailwind C
 | `note-soft` | `#eff5ff` | `#142035` | note Callout 背景 |
 | `warn` | `#b45309` | `#f5b454` | warn Callout のアイコン・枠 |
 | `warn-soft` | `#fff7e8` | `#2a2112` | warn Callout 背景 |
+| `tip` | `#047857` | `#5eead4` | tip Callout のアイコン・ラベル |
+| `tip-soft` | `#ecfdf5` | `#0f2a26` | tip Callout 背景 |
 
 - 文字に使う組み合わせはコントラスト比 4.5:1 以上（大きい文字は 3:1）を Phase 4 で計測し、[EVALUATION.md](./EVALUATION.md) に記録する。
 
