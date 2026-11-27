@@ -27,3 +27,6 @@ coverage/
 .DS_Store
 Thumbs.db
 *.log
+build-subpath/
+build-e2e/
+build-e2e-subpath/

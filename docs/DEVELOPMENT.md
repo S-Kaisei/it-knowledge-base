@@ -21,7 +21,7 @@
 | `preview` | `production` | `--profile preview` | `127.0.0.1:8080` | nginx（非 root）で本番相当の静的配信 |
 | `qa` | `qa` | `docker compose run --rm qa ...` | なし | 型・lint・テスト・ビルド・E2E（Chromium） |
 
-- `web` はソースを bind mount（`.:/app`）、`node_modules` は named volume。`qa` は別の named volume を使う。
+- `web` はソースを bind mount（`.:/app`）、`node_modules` は named volume。`qa` は匿名 volume を使い、`docker compose run --rm` のたびに qa イメージ内の `node_modules` から作り直される（lockfile とイメージが常に一致）。
 - privileged・Docker ソケット・ホームディレクトリのマウントはしない。
 
 ## 3. 基本コマンド
@@ -54,7 +54,7 @@ docker compose down
 | --- | --- |
 | パッケージを追加・更新する | `docker compose exec web npm install <pkg>@<version>` → bind mount 経由で `package.json` / `package-lock.json` が更新される |
 | 他者の lockfile 変更を取り込んだ（pull 後） | `docker compose run --rm web npm ci` で web の volume を lockfile と一致させ、`docker compose restart web` |
-| qa の依存も更新する | `docker compose run --rm qa npm ci` |
+| qa の依存も更新する | `docker compose build qa`（qa は匿名 volume のため、イメージ再ビルドで反映される） |
 | イメージ側も更新する（CI・preview と揃える） | `docker compose build web qa` |
 | Playwright を更新した | `docker compose build qa`（qa イメージで `npx playwright install --with-deps chromium` が再実行され、ブラウザ版が一致する） |
 

@@ -23,7 +23,7 @@ paths:
 - サービスは `web` / `preview`（profile: preview）/ `qa`（profile: qa）のみ。DB・Redis等を追加しない。
 - ポートは `127.0.0.1:` にバインド（web 5173、preview 8080）。qa はポート公開なし。
 - `privileged`、Docker ソケットのマウント、ホームディレクトリのマウント、Claude Code 認証情報のコピーを禁止。
-- `node_modules` は named volume（web と qa で別）。bind mount はリポジトリのみ。
+- `node_modules` は web が named volume、qa は匿名 volume（毎回 qa イメージの内容から作られる）。bind mount はリポジトリのみ。
 - polling（`CHOKIDAR_USEPOLLING` 等）は必要な環境でのみ有効にする。
 
 ## Nginx

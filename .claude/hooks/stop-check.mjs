@@ -22,7 +22,11 @@ export function classifyChanges(files) {
   const areas = new Set();
   for (const f of files) {
     if (/^src\/content\/|^public\/images\//.test(f)) areas.add('content');
-    else if (/^(src|scripts|tests)\//.test(f) || /^(package(-lock)?\.json|tsconfig[^/]*\.json|[^/]+\.config\.(ts|mjs|js|cjs)|\.markdownlint[^/]*|\.prettierrc[^/]*|eslint\.config\.[^/]+)$/.test(f)) areas.add('code');
+    else if (
+      /^(src|scripts|tests)\//.test(f) ||
+      /^(package(-lock)?\.json|tsconfig[^/]*\.json|[^/]+\.config\.(ts|mjs|js|cjs)|\.markdownlint[^/]*|\.prettierrc[^/]*|eslint\.config\.[^/]+)$/.test(f)
+    )
+      areas.add('code');
     else if (/^\.claude\/hooks\//.test(f)) areas.add('code');
     else if (/^(Dockerfile|compose\.ya?ml|\.dockerignore)$|^docker\//.test(f)) areas.add('docker');
     else if (/^\.github\//.test(f)) areas.add('ci');
@@ -52,9 +56,11 @@ export function selectGates(areas, scripts) {
     want('lint:md');
   }
   const notes = [];
-  if (areas.has('docker')) notes.push('Docker 設定が変更されています。`docker compose build` と該当サービスの起動確認を行ってください（Stop フックでは重いビルドを自動実行しません）');
+  if (areas.has('docker'))
+    notes.push('Docker 設定が変更されています。`docker compose build` と該当サービスの起動確認を行ってください（Stop フックでは重いビルドを自動実行しません）');
   if (areas.has('ci')) notes.push('CI 設定が変更されています。ワークフローは GitHub 上でのみ完全に検証できます');
-  if (areas.has('content') || areas.has('code')) notes.push('静的ビルド・E2E は Stop フックでは実行しません。完了報告の前に `docker compose run --rm qa npm run verify` を実行してください');
+  if (areas.has('content') || areas.has('code'))
+    notes.push('静的ビルド・E2E は Stop フックでは実行しません。完了報告の前に `docker compose run --rm qa npm run verify` を実行してください');
   return { gates, skipped, notes };
 }
 
@@ -94,7 +100,9 @@ function loadState(file) {
 }
 
 function saveState(file, state) {
-  const entries = Object.entries(state.sessions).sort((a, b) => (b[1].updatedAt ?? 0) - (a[1].updatedAt ?? 0)).slice(0, 20);
+  const entries = Object.entries(state.sessions)
+    .sort((a, b) => (b[1].updatedAt ?? 0) - (a[1].updatedAt ?? 0))
+    .slice(0, 20);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify({ sessions: Object.fromEntries(entries) }, null, 2)}\n`);
 }
@@ -108,7 +116,9 @@ function dockerStatus(project) {
 
 function runGate(project, docker, gate) {
   const npmArgs = ['run', gate.name, ...gate.args];
-  const args = docker.webRunning ? ['compose', 'exec', '-T', 'web', 'npm', ...npmArgs] : ['compose', 'run', '--rm', '--no-deps', '-T', 'web', 'npm', ...npmArgs];
+  const args = docker.webRunning
+    ? ['compose', 'exec', '-T', 'web', 'npm', ...npmArgs]
+    : ['compose', 'run', '--rm', '--no-deps', '-T', 'web', 'npm', ...npmArgs];
   const display = `docker ${args.join(' ')}`;
   const r = run('docker', args, { cwd: project, timeoutMs: GATE_TIMEOUT_MS });
   return { ...r, display };
@@ -143,7 +153,9 @@ async function main() {
     return finish({ systemMessage: '[stop-check] 前回失敗した品質ゲートから変更がないため、ブロックせずに終了します。失敗は未解決として報告してください。' });
   }
   if (s.failures >= MAX_ATTEMPTS) {
-    return finish({ systemMessage: `[stop-check] 品質ゲートが ${s.failures} 回連続で失敗しました。これ以上ブロックしません。失敗内容を未解決の課題として報告してください。` });
+    return finish({
+      systemMessage: `[stop-check] 品質ゲートが ${s.failures} 回連続で失敗しました。これ以上ブロックしません。失敗内容を未解決の課題として報告してください。`,
+    });
   }
 
   const pkg = readJsonSafe(path.join(project, 'package.json'), null);
@@ -177,7 +189,9 @@ async function main() {
     s.failures = 0;
     s.lastFailed = undefined;
     const ok = results.map((x) => `✓ ${x.r.display}`).join('\n');
-    return finish({ systemMessage: `[stop-check] 品質ゲート通過:\n${ok}${notes.length ? `\n${notes.join('\n')}` : ''}${skipped.length ? `\n未整備: ${skipped.join(', ')}` : ''}` });
+    return finish({
+      systemMessage: `[stop-check] 品質ゲート通過:\n${ok}${notes.length ? `\n${notes.join('\n')}` : ''}${skipped.length ? `\n未整備: ${skipped.join(', ')}` : ''}`,
+    });
   }
 
   s.failures = (s.failures ?? 0) + 1;

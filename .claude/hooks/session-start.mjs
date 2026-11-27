@@ -8,11 +8,14 @@ export function summarize({ branch, changed, dockerOk, webRunning, hasPackageJso
   const lines = [];
   lines.push('## プロジェクト状態（session-start フック）');
   lines.push(`- ブランチ: ${branch || '(不明)'}${branch === 'main' ? ' ← main 上です。作業前に Phase/機能ごとのブランチを切ってください' : ''}`);
-  lines.push(`- 未コミットの変更: ${changed.length ? `${changed.length} 件（${changed.slice(0, 5).join(', ')}${changed.length > 5 ? ' ほか' : ''}）` : 'なし'}`);
+  lines.push(
+    `- 未コミットの変更: ${changed.length ? `${changed.length} 件（${changed.slice(0, 5).join(', ')}${changed.length > 5 ? ' ほか' : ''}）` : 'なし'}`,
+  );
   if (!dockerOk) lines.push('- Docker: 利用不可。品質ゲートは実行できないため、検証結果は「未検証」として報告すること');
   else lines.push(`- Docker: 利用可能 / web コンテナ: ${webRunning ? '起動中' : '停止中（`docker compose up -d --build web` で起動）'}`);
   if (!hasPackageJson) lines.push('- package.json 未作成（初期構築中）。npm スクリプトに依存する検証はスキップされます');
-  else if (dockerOk && !hasNodeModulesVolume && !webRunning) lines.push('- 依存関係が未インストールの可能性があります（初回は `docker compose up -d --build web`）');
+  else if (dockerOk && !hasNodeModulesVolume && !webRunning)
+    lines.push('- 依存関係が未インストールの可能性があります（初回は `docker compose up -d --build web`）');
   lines.push('');
   lines.push('主要コマンド: `docker compose exec web npm run typecheck|lint|test|build` / `docker compose run --rm qa npm run verify`');
   lines.push('作業ループ: Understand → Plan → Implement → Review → Verify → Fix → Re-verify → Report（詳細は CLAUDE.md）');
@@ -25,7 +28,12 @@ async function main() {
   const cwd = input?.cwd && fs.existsSync(input.cwd) ? input.cwd : project;
   const branch = run('git', ['branch', '--show-current'], { cwd, timeoutMs: 3000 }).stdout.trim();
   const status = run('git', ['status', '--porcelain'], { cwd, timeoutMs: 5000 });
-  const changed = status.ok ? status.stdout.split('\n').filter(Boolean).map((l) => l.slice(3)) : [];
+  const changed = status.ok
+    ? status.stdout
+        .split('\n')
+        .filter(Boolean)
+        .map((l) => l.slice(3))
+    : [];
   const docker = run('docker', ['info', '--format', '{{.ServerVersion}}'], { cwd, timeoutMs: 5000 });
   const dockerOk = docker.ok && docker.stdout.trim().length > 0;
   let webRunning = false;

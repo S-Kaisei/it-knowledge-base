@@ -1,0 +1,61 @@
+name: it-knowledge-base
+
+# Security baseline for every service: no privileged mode, no docker.sock,
+# no home-directory mounts, all capabilities dropped, ports bound to localhost only.
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  # Vite dev server with HMR — http://127.0.0.1:5173
+  web:
+    <<: *hardening
+    build:
+      context: .
+      target: dev
+    init: true
+    ports:
+      - '127.0.0.1:5173:5173'
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      # Set VITE_USE_POLLING=true when file events don't reach the container (some VMs / network drives).
+      VITE_USE_POLLING: ${VITE_USE_POLLING:-false}
+      BASE_PATH: ${BASE_PATH:-/}
+
+  # Production-equivalent static site served by non-root nginx — http://127.0.0.1:8080
+  preview:
+    <<: *hardening
+    profiles: ['preview']
+    build:
+      context: .
+      target: production
+      args:
+        BASE_PATH: ${BASE_PATH:-/}
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - '127.0.0.1:8080:8080'
+
+  # Quality gate runner (type check → lint → tests → build → links → Playwright E2E)
+  qa:
+    <<: *hardening
+    profiles: ['qa']
+    build:
+      context: .
+      target: qa
+    init: true
+    shm_size: '1gb'
+    volumes:
+      - .:/app
+      # anonymous volume: node_modules always come from the qa image (rebuild after lockfile changes)
+      - /app/node_modules
+    environment:
+      CI: 'true'
+
+volumes:
+  node_modules:
