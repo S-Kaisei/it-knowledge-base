@@ -1,10 +1,12 @@
 import { MDXProvider } from '@mdx-js/react';
+import { useRef } from 'react';
 import { Link, Outlet, useMatches } from 'react-router';
 import type { Route } from './+types/article-layout';
 import { ArticlePager, ReferenceList, RelatedArticles } from '~/components/article/article-footer';
 import { DifficultyBadge } from '~/components/article/difficulty-badge';
 import { mdxComponents } from '~/components/article/mdx-components';
 import { InlineTableOfContents, TableOfContents } from '~/components/article/table-of-contents';
+import { useScrollableMath } from '~/hooks/use-scrollable-math';
 import { getArticle, getArticleByPath, getCategory, resolveArticles, slugFromRouteId } from '~/lib/content';
 import type { ArticleMeta } from '~/lib/content-schema';
 import { SITE, pageTitle } from '~/lib/site';
@@ -34,6 +36,8 @@ export const meta: Route.MetaFunction = ({ matches, location }) => {
 
 export default function ArticleLayout() {
   const article = findArticle(useMatches());
+  const proseRef = useRef<HTMLDivElement>(null);
+  useScrollableMath(proseRef, article?.slug ?? '');
   if (!article) return <Outlet />;
   const category = getCategory(article.category);
   const prerequisites = resolveArticles(article.prerequisites);
@@ -91,7 +95,7 @@ export default function ArticleLayout() {
             <InlineTableOfContents items={article.toc} />
           </div>
 
-          <div className="prose-ikb mt-7">
+          <div ref={proseRef} className="prose-ikb mt-7">
             <MDXProvider components={mdxComponents}>
               <Outlet />
             </MDXProvider>

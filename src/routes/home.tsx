@@ -37,7 +37,7 @@ export default function Home() {
               <CategoryIcon name={c.icon} className={cn('row-span-2 mt-0.5 size-5', empty ? 'text-subtle' : 'text-accent-text')} />
               <span className={cn('flex justify-between gap-2 text-[15px] font-semibold', empty && 'text-subtle')}>
                 {c.name}
-                <span className="font-mono text-xs font-normal text-subtle">{empty ? '準備中' : c.articleCount}</span>
+                <span className="shrink-0 font-mono text-xs font-normal whitespace-nowrap text-subtle">{empty ? '準備中' : c.articleCount}</span>
               </span>
               <span className="text-[12.5px] text-subtle">{c.topics}</span>
             </>

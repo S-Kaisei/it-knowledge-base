@@ -34,7 +34,7 @@ export function ReferenceList({ article }: { article: ArticleMeta }) {
       <ol className="list-decimal pl-5 text-sm text-muted">
         {article.references.map((ref) => (
           <li key={ref.url} className="my-1.5">
-            <a href={ref.url} rel="noopener noreferrer">
+            <a href={ref.url} rel="noopener noreferrer" className="underline">
               {ref.title}
             </a>
             {ref.publisher ? <span>（{ref.publisher}）</span> : null}
