@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(docker compose exec web npm run typecheck)",
+      "Bash(docker compose exec web npm run lint)",
+      "Bash(docker compose exec web npm run lint:md)",
+      "Bash(docker compose exec web npm run format)",
+      "Bash(docker compose exec web npm run format:check)",
+      "Bash(docker compose exec web npm run content:generate)",
+      "Bash(docker compose exec web npm run content:check)",
+      "Bash(docker compose exec web npm run test)",
+      "Bash(docker compose exec web npm run test -- *)",
+      "Bash(docker compose exec web npm run build)",
+      "Bash(docker compose exec web npm run links:check)",
+      "Bash(docker compose exec web npm run verify)",
+      "Bash(docker compose exec web npm run verify -- --quick)",
+      "Bash(docker compose run --rm qa npm run verify)",
+      "Bash(docker compose run --rm qa npm run verify -- --quick)",
+      "Bash(docker compose run --rm qa npm run test:e2e)",
+      "Bash(docker compose run --rm qa npm run test:e2e -- *)",
+      "Bash(docker compose run --rm qa npx playwright test *)",
+      "Bash(docker compose up -d --build web)",
+      "Bash(docker compose up -d web)",
+      "Bash(docker compose --profile preview up -d --build preview)",
+      "Bash(docker compose build *)",
+      "Bash(docker compose logs *)",
+      "Bash(docker compose ps)",
+      "Bash(docker compose ps *)",
+      "Bash(docker compose down)",
+      "Bash(docker compose version)",
+      "Bash(docker info)",
+      "Bash(docker info *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch --show-current)",
+      "Bash(node .claude/hooks/*)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh workflow run *)",
+      "Bash(docker compose down -v *)",
+      "Bash(docker compose down --volumes *)",
+      "Bash(docker volume rm *)",
+      "Edit(/.claude/settings.json)",
+      "Edit(/.github/workflows/**)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(docker system prune *)",
+      "Bash(docker volume prune *)",
+      "Bash(npm publish *)",
+      "Bash(sudo *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.claude/.credentials.json)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs\"",
+            "timeout": 30,
+            "statusMessage": "プロジェクト状態を確認しています"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-command.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.mjs\"",
+            "timeout": 900,
+            "statusMessage": "品質ゲートを確認しています"
+          }
+        ]
+      }
+    ]
+  }
+}

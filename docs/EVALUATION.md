@@ -1,0 +1,62 @@
+# 評価記録
+
+> ハーネスとコンテンツの評価計画と結果。**現時点ですべて未実施**。実行していない検証を成功と記録しない。
+
+状態の凡例：`未実施` / `成功` / `失敗` / `未検証`（環境制約で実行不可。理由を備考に書く）
+
+## 1. ハーネス評価（SPEC §16）
+
+fixture は `tests/harness/` に置く。危険な操作は実際には実行せず、fixture の入力 JSON で hook を検証する。hook 単体テストだけでは「登録成功」とみなさず、Claude Code 上でのイベント発火も確認する。
+
+| # | 検証項目 | 方法 | テスト場所 | 状態 |
+| --- | --- | --- | --- | --- |
+| H1 | 正常な記事追加が成功する | 正常 MDX fixture で `content:generate` → `build`、ルートと HTML 生成を確認 | `tests/harness/`, `tests/fixtures/` | 未実施 |
+| H2 | 不正 Frontmatter を検出 | 必須欠落・型不正・不正日付の fixture で `content:check` が非ゼロ終了 | `tests/harness/` | 未実施 |
+| H3 | 内部リンク切れを検出 | 存在しない slug へのリンク fixture で `content:check` / `links:check` が失敗 | `tests/harness/` | 未実施 |
+| H4 | 重複 slug を検出 | 同一 slug 2 ファイルの fixture | `tests/harness/` | 未実施 |
+| H5 | 不正な数式・図解を検出 | KaTeX エラー / Mermaid 構文エラー fixture | `tests/harness/` | 未実施 |
+| H6 | draft が公開されない | draft fixture がルート・prerender・Pagefind・sitemap に含まれないことを確認 | `tests/harness/`, `tests/e2e/` | 未実施 |
+| H7 | 危険コマンドの制限 | `guard-command.mjs` に危険コマンドの PreToolUse 入力を与え `deny` / `ask` を確認 | `tests/harness/` | 未実施 |
+| H8 | Stop hook が失敗を検知 | 検証失敗状態で `stop-check.mjs` が block を返す | `tests/harness/` | 未実施 |
+| H9 | Stop hook の無限ループ防止 | `stop_hook_active: true` と試行カウンタ上限で block しないことを確認 | `tests/harness/` | 未実施 |
+| H10 | 読み取り専用レビュー | reviewer 系エージェントの `tools` に Edit / Write / Bash がないことを静的検査 + 実セッションで編集不可を確認 | `tests/harness/` | 未実施 |
+| H11 | Docker 不可時の報告 | Docker 不在をシミュレートし、Stop hook が失敗ではなく「未検証」を報告 | `tests/harness/` | 未実施 |
+| H12 | 変更なしで不要な検証をしない | クリーンな作業ツリーで Stop hook が検証をスキップ | `tests/harness/` | 未実施 |
+| H13 | Compose 起動の再現性 | クリーン状態から `docker compose up -d --build web` → HTTP 200、`down` 後に再実行 | 手動 / CI | 未実施 |
+| H14 | hooks の実イベント発火 | `claude -p` で各イベントを発火させ、`--debug` ログで実行を確認（`--bare` は使わない） | 手動 | 未実施 |
+| H15 | 初期構築中に開発を止めない | スクリプト未作成状態で hooks がエラー停止しない | `tests/harness/` | 未実施 |
+
+## 2. サイト品質ゲート（SPEC §13・§15）
+
+| # | 検証項目 | 方法 | テスト場所 | 状態 |
+| --- | --- | --- | --- | --- |
+| S1 | `npm run verify` 全ステップ成功 | `docker compose run --rm qa npm run verify` | `scripts/verify.mjs` | 未実施 |
+| S2 | ルート配信の E2E | `BASE_PATH=/` ビルドで Playwright | `tests/e2e/` | 未実施 |
+| S3 | サブパス配信の E2E | `BASE_PATH=/it-knowledge-base/` ビルドで Playwright | `tests/e2e/` | 未実施 |
+| S4 | 日本語全文検索 | 実際の日本語クエリ（例：「キャッシュ」）で結果と URL を確認 | `tests/e2e/` | 未実施 |
+| S5 | 404 応答 | 存在しない URL で 404 ステータスと 404 ページ（preview / nginx） | `tests/e2e/` | 未実施 |
+| S6 | 本番イメージのビルド | `docker compose --profile preview up -d --build preview` | 手動 / CI | 未実施 |
+| S7 | コントラスト比 | トークンの文字色 × 背景色を計測（4.5:1 以上） | `tests/unit/` | 未実施 |
+| S8 | 代表画面スクリーンショットの目視レビュー | Playwright で取得 → visual-reviewer + 人間 | `tests/e2e/` | 未実施 |
+
+## 3. 実行結果の記録
+
+検証を実行したら、以下に追記する（新しいものを上に）。
+
+| 日付 | 対象（#） | コマンド | 環境 | 結果 | 備考 |
+| --- | --- | --- | --- | --- | --- |
+| — | — | — | — | — | まだ記録なし |
+
+記入例：`2026-12-05 / S1 / docker compose run --rm qa npm run verify / Docker Desktop, macOS / 失敗 / step 8 build で失敗、修正後に再実行`
+
+## 4. コンテンツ評価記録（SPEC §17）
+
+ルーブリックは [CONTENT_GUIDE.md](./CONTENT_GUIDE.md#6-評価ルーブリックspec-17) を参照。全軸 4 点以上が公開目安。LLM 評価と人間評価を区別して記録する。
+
+| 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| — | — | — | — | — | — | — | — | — | まだ記録なし |
+
+## 5. 未検証項目・既知の課題
+
+- 上記すべて未実施（Phase 0 時点）。
