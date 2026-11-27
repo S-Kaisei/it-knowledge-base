@@ -48,6 +48,20 @@ jobs:
         with:
           path: site
           name: github-pages-${{ github.run_attempt }}
+      # The artifact listing API is eventually consistent: deploy-pages has failed with "Found 0 artifact(s)"
+      # one second after a successful upload. Wait until the artifact is listed (max ~60 s).
+      - name: Wait for the Pages artifact to be listed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT: github-pages-${{ github.run_attempt }}
+        run: |
+          for _ in $(seq 1 30); do
+            if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '.artifacts[].name' | grep -qx "$ARTIFACT"; then
+              echo "artifact $ARTIFACT is listed"; exit 0
+            fi
+            sleep 2
+          done
+          echo "artifact $ARTIFACT was not listed within 60 s" >&2; exit 1
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         with:
