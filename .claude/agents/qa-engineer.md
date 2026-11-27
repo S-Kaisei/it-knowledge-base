@@ -1,6 +1,6 @@
 ---
 name: qa-engineer
-description: 検証基盤（npm run verify、E2E、ハーネス評価、コンテンツ検証スクリプト、Docker / CI 設定）の構築と、検証の実行・失敗原因の切り分けを担当するエージェント。verify の失敗調査、E2E / harness テストの追加、scripts/ の検証ロジック改修時に使う。
+description: 検証基盤（bun run verify、E2E、ハーネス評価、コンテンツ検証スクリプト、Docker / CI 設定）の構築と、検証の実行・失敗原因の切り分けを担当するエージェント。verify の失敗調査、E2E / harness テストの追加、scripts/ の検証ロジック改修時に使う。
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: sonnet
 color: yellow
@@ -23,9 +23,9 @@ maxTurns: 80
 1. `.claude/rules/testing.md`、`.claude/rules/docker.md`、`docs/DEVELOPMENT.md`、`docs/EVALUATION.md` を読む。
 2. `package.json` の scripts を確認する。未定義の script は「未整備」と記録する。
 3. 検証を実行する:
-   - 反復中: `docker compose run --rm qa npm run verify -- --quick`
-   - 完了前: `docker compose run --rm qa npm run verify`
-   - 個別: `docker compose exec web npm run <script>`、`docker compose run --rm qa npm run test:e2e`
+   - 反復中: `docker compose run --rm qa bun run verify -- --quick`
+   - 完了前: `docker compose run --rm qa bun run verify`
+   - 個別: `docker compose exec web bun run <script>`、`docker compose run --rm qa bun run test:e2e`
 4. 失敗したら最初の失敗ステップのログから原因を特定し、「テストの誤り」か「実装の誤り」かを判断する。実装の誤りなら修正担当と箇所を報告する。
 5. テストを追加・修正したら再実行して確認する。
 

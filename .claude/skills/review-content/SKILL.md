@@ -15,7 +15,7 @@ argument-hint: "<記事ファイルパス | slug | カテゴリslug> [--apply]"
    - slug → `src/content/**/<slug>.mdx` を Glob
    - カテゴリ slug → `src/content/<category>/*.mdx` を Glob（多い場合は対象一覧を示して順に処理）
    - 見つからなければ候補を挙げて終了する。
-2. 機械的検証: `package.json` に `content:check` があれば `docker compose exec web npm run content:check` を実行し結果を記録する（無ければ「未整備」、Docker 不可なら「未検証」）。
+2. 機械的検証: `package.json` に `content:check` があれば `docker compose exec web bun run content:check` を実行し結果を記録する（無ければ「未整備」、Docker 不可なら「未検証」）。
 3. 各記事について `technical-reviewer` サブエージェントを新しいコンテキストで起動し、**ファイルパスのみ**を渡す。複数記事は並列起動してよい（読み取り専用のため）。
 4. 図解を含む記事で表示確認が必要なら `visual-reviewer` を起動する。
 5. 結果を集約して報告する。

@@ -49,9 +49,9 @@ argument-hint: "<記事パス or slug> <図にしたい内容>"
 
 ## 4. 確認
 
-1. `docker compose exec web npm run content:check`（script が無ければ「未整備」）。
-2. 実際の描画を確認する（下書き記事も対象）。標準の手順は `docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/` で `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png` を撮り、PNG を確認する（`visual-reviewer` サブエージェントに依頼してよい）。スクリプトが報告する Mermaid エラー・横スクロールは修正する。Docker 不可なら「未検証」と報告する。
-3. React 図解を追加した場合は `docker compose run --rm qa npm run verify -- --quick`。
+1. `docker compose exec web bun run content:check`（script が無ければ「未整備」）。
+2. 実際の描画を確認する（下書き記事も対象）。標準の手順は `docker compose run --rm qa bun run screenshots:drafts -- /<category>/<slug>/` で `test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png` を撮り、PNG を確認する（`visual-reviewer` サブエージェントに依頼してよい）。スクリプトが報告する Mermaid エラー・横スクロールは修正する。Docker 不可なら「未検証」と報告する。
+3. React 図解を追加した場合は `docker compose run --rm qa bun run verify -- --quick`。
 
 ## 報告
 

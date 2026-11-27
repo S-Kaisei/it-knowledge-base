@@ -15,6 +15,7 @@
 | [0007](./0007-claude-code-harness-design.md) | Claude Code ハーネスの設計 | Accepted | 2026-11-28 |
 | [0008](./0008-self-hosted-fonts.md) | フォントのセルフホスト | Accepted | 2026-11-28 |
 | [0009](./0009-ci-cd-verified-artifact-deploy.md) | CI/CD：検証済み成果物をそのまま公開する | Accepted | 2026-11-28 |
+| [0010](./0010-bun-package-manager.md) | パッケージマネージャーを npm から bun に移行 | Accepted | 2026-11-28 |
 
 ## 運用
 

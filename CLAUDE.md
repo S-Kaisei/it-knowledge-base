@@ -27,18 +27,18 @@ Astro・Starlight・Next.js は使わない。バージョンの根拠は [ADR-0
 
 ```bash
 docker compose up -d --build web                 # 開発サーバー http://127.0.0.1:5173
-docker compose exec web npm run typecheck        # 型チェック
-docker compose exec web npm run lint             # ESLint
-docker compose exec web npm run content:check    # 記事の構造検証
-docker compose exec web npm run test             # ユニット・コンポーネントテスト
-docker compose exec web npm run build            # 静的サイト生成（build/client）
-docker compose run --rm qa npm run verify        # 総合品質ゲート（E2E 含む）
-docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/  # 下書き込みの表示確認
+docker compose exec web bun run typecheck        # 型チェック
+docker compose exec web bun run lint             # ESLint
+docker compose exec web bun run content:check    # 記事の構造検証
+docker compose exec web bun run test             # ユニット・コンポーネントテスト
+docker compose exec web bun run build            # 静的サイト生成（build/client）
+docker compose run --rm qa bun run verify        # 総合品質ゲート（E2E 含む）
+docker compose run --rm qa bun run screenshots:drafts -- /<category>/<slug>/  # 下書き込みの表示確認
 docker compose --profile preview up -d --build preview  # Nginx 本番相当 http://127.0.0.1:8080
 docker compose down
 ```
 
-Claude Code はホストで動かし、アプリの実行・検証は Docker で行う。ホストに `npm install` しない（Hooks の実行に Node.js 18+ のみ必要）。
+Claude Code はホストで動かし、アプリの実行・検証は Docker で行う。ホストで `bun install` / `npm install` しない（Hooks の実行に Node.js 18+ のみ必要）。パッケージ管理は bun（`bun.lock`）、ランタイムは Node.js（ADR-0010）。
 
 ## アーキテクチャ上の制約
 
@@ -61,7 +61,7 @@ Claude Code はホストで動かし、アプリの実行・検証は Docker で
 
 ## 品質ゲートと完了条件
 
-- コード変更: `npm run verify -- --quick`（型・ESLint・Markdownlint・Prettier・content・unit・components）が通る。完了報告の前に `docker compose run --rm qa npm run verify`（ビルド・リンク・E2E 含む）。
+- コード変更: `bun run verify -- --quick`（型・ESLint・Markdownlint・Prettier・content・unit・components）が通る。完了報告の前に `docker compose run --rm qa bun run verify`（ビルド・リンク・E2E 含む）。
 - 記事変更: `content:check` が通り、独立レビューで5軸すべて4点以上（[docs/CONTENT_GUIDE.md](docs/CONTENT_GUIDE.md)）。
 - Stop フックが変更内容に応じたゲートを自動実行する。Docker が使えない場合は「未検証」と報告する。
 - 実行していないテストを成功と報告しない。失敗するテストを削除・弱体化して通さない。

@@ -1,6 +1,6 @@
 # 開発ガイド
 
-> Docker 環境・npm scripts は実装済み。本書の手順は実地で確認している（コマンドの正は `package.json`・`compose.yaml`・`Dockerfile`）。
+> Docker 環境・package.json scripts は実装済み。本書の手順は実地で確認している（コマンドの正は `package.json`・`compose.yaml`・`Dockerfile`）。
 
 ## 1. 前提
 
@@ -33,12 +33,12 @@ docker compose up -d --build web
 # ログ確認（Ctrl+C で抜ける。コンテナは止まらない）
 docker compose logs -f web
 # 個別の検証（起動中の web コンテナ内で実行）
-docker compose exec web npm run typecheck
-docker compose exec web npm run lint
-docker compose exec web npm run test
-docker compose exec web npm run build
+docker compose exec web bun run typecheck
+docker compose exec web bun run lint
+docker compose exec web bun run test
+docker compose exec web bun run build
 # 全品質ゲート（qa コンテナ単体で実行可能）
-docker compose run --rm qa npm run verify
+docker compose run --rm qa bun run verify
 # 本番相当の配信確認 → http://127.0.0.1:8080/
 docker compose --profile preview up -d --build preview
 # 停止（volume は削除しない）
@@ -53,14 +53,14 @@ docker compose down
 
 | 状況 | 手順 |
 | --- | --- |
-| パッケージを追加・更新する | `docker compose exec web npm install <pkg>@<version>` → bind mount 経由で `package.json` / `package-lock.json` が更新される |
-| 他者の lockfile 変更を取り込んだ（pull 後） | `docker compose run --rm web npm ci` で web の volume を lockfile と一致させ、`docker compose restart web` |
+| パッケージを追加・更新する | `docker compose exec web bun add <pkg>@<version>`（開発用は `bun add -d`）→ bind mount 経由で `package.json` / `bun.lock` が更新される |
+| 他者の lockfile 変更を取り込んだ（pull 後） | `docker compose run --rm web bun install --frozen-lockfile` で web の volume を lockfile と一致させ、`docker compose restart web` |
 | qa の依存も更新する | `docker compose build qa`（qa は匿名 volume のため、イメージ再ビルドで反映される） |
 | イメージ側も更新する（CI・preview と揃える） | `docker compose build web qa` |
-| Playwright を更新した | `docker compose build qa`（qa イメージで `npx playwright install --with-deps chromium` が再実行され、ブラウザ版が一致する） |
+| Playwright を更新した | `docker compose build qa`（qa イメージで `bun run playwright install --with-deps chromium` が再実行され、ブラウザ版が一致する） |
 
-- `package-lock.json` は必ずコミットする。再現インストールは `npm ci`。
-- ホスト側で `npm install` しない（ホストとコンテナで node_modules の内容が混ざるのを避ける）。
+- `bun.lock` は必ずコミットする。再現インストールは `bun install --frozen-lockfile`。
+- ホスト側で `bun install` / `npm install` しない（ホストとコンテナで node_modules の内容が混ざるのを避ける）。
 
 ## 5. HMR が効かない場合（polling）
 
@@ -77,7 +77,7 @@ VITE_USE_POLLING=true docker compose up -d web
 GitHub Pages（`https://<user>.github.io/it-knowledge-base/`）向けはサブパスでビルドする。
 
 ```bash
-docker compose exec web npm run build:subpath        # → build-subpath/client（BASE_PATH=/it-knowledge-base/）
+docker compose exec web bun run build:subpath        # → build-subpath/client（BASE_PATH=/it-knowledge-base/）
 # preview イメージをサブパスで作る場合
 BASE_PATH=/it-knowledge-base/ docker compose --profile preview up -d --build preview   # http://127.0.0.1:8080/it-knowledge-base/
 ```
@@ -90,12 +90,12 @@ BASE_PATH=/it-knowledge-base/ docker compose --profile preview up -d --build pre
 下書き（`draft: true`）は本番ビルドに含まれない。開発サーバー（`dev`）では表示される。レビュー用の静的ビルドとスクリーンショットは次のとおり（**確認専用。CI・デプロイでは使えない**）。
 
 ```bash
-docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
+docker compose run --rm qa bun run screenshots:drafts -- /fundamentals/cpu/
 # → test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png
 #   Mermaid の描画エラーと横スクロールの発生も検出して報告する
 ```
 
-## 7. npm scripts
+## 7. package.json scripts
 
 | script | 内容 |
 | --- | --- |
@@ -107,7 +107,7 @@ docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
 | `content:generate` | `src/generated/content-index.json` を生成（`CONTENT_DIR` 指定時は `content-index.<dir>.json`） |
 | `content:check` | frontmatter・slug・日付（JST）・リンク・見出し・プレースホルダー・未登録 MDX コンポーネント・Mermaid・KaTeX・代替テキストの検証（[CONTENT_GUIDE.md](./CONTENT_GUIDE.md) 7 章） |
 | `test` | Vitest（unit + components） |
-| `test:e2e` | `build:e2e` → Playwright（site / fixture / mobile / subpath プロジェクト）。`site` プロジェクトは `build/client` を使うため、先に `npm run build` が必要（verify では step 8 で生成済み） |
+| `test:e2e` | `build:e2e` → Playwright（site / fixture / mobile / subpath プロジェクト）。`site` プロジェクトは `build/client` を使うため、先に `bun run build` が必要（verify では step 8 で生成済み） |
 | `build` | content:generate → react-router build → postbuild → pagefind（`build/client`） |
 | `build:subpath` | GitHub Pages 用（`BASE_PATH=/it-knowledge-base/` → `build-subpath/client`） |
 | `build:e2e` | fixture コンテンツでルート・サブパスをビルド（E2E 用） |
@@ -119,7 +119,7 @@ docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
 
 ## 8. verify の順序
 
-`npm run verify` は以下を順に実行し、最初の失敗で停止して非ゼロ終了、最後に要約を出力する。
+`bun run verify` は以下を順に実行し、最初の失敗で停止して非ゼロ終了、最後に要約を出力する。
 
 1. 型チェック（`typecheck`）
 2. ESLint（`lint`）
@@ -138,9 +138,9 @@ hooks・Docker・GitHub Actions は同じ `scripts/verify.mjs` を共有する�
 
 | 症状 | 確認・対処 |
 | --- | --- |
-| `port is already allocated`（5173 / 8080） | `lsof -i :5173` で占有プロセスを確認。別の compose プロジェクトや `npm run dev` が残っていないか |
+| `port is already allocated`（5173 / 8080） | `lsof -i :5173` で占有プロセスを確認。別の compose プロジェクトや `bun run dev` が残っていないか |
 | ファイルを保存しても画面が更新されない | `docker compose logs -f web` でエラー確認 → 5 章の polling を試す |
-| `Cannot find module` / 依存が古い | 4 章の `docker compose run --rm web npm ci` |
+| `Cannot find module` / 依存が古い | 4 章の `docker compose run --rm web bun install --frozen-lockfile` |
 | 生成ファイルの所有者が root になる | web / qa は `node` ユーザー（uid 1000）で動く。Linux ホストで uid が異なる場合は所有者が 1000 になる点に注意 |
 | `Cannot connect to the Docker daemon` | Docker Desktop / dockerd が起動しているか確認。Claude Code の検証はこの場合「未検証」と報告される |
 | 検索が動かない（開発サーバー） | 仕様。検索インデックスはビルド後のみ生成される。`preview` で確認する |
@@ -148,7 +148,7 @@ hooks・Docker・GitHub Actions は同じ `scripts/verify.mjs` を共有する�
 
 ## 10. CI / デプロイ
 
-- `.github/workflows/ci.yml`：PR と `main` への push で `npm run verify`（Node は `.node-version`）、Playwright レポート保存、Docker（dev / production）のビルドと nginx コンテナのスモークテスト。`main` では検証済みのサブパスビルドを `site` アーティファクトとして保存する。
+- `.github/workflows/ci.yml`：PR と `main` への push で `bun run verify`（Node は `.node-version`）、Playwright レポート保存、Docker（dev / production）のビルドと nginx コンテナのスモークテスト。`main` では検証済みのサブパスビルドを `site` アーティファクトとして保存する。
 - `.github/workflows/deploy.yml`：CI 成功後、**検証済みアーティファクトをそのまま** GitHub Pages へ公開する。リポジトリ変数 `PAGES_DEPLOY_ENABLED=true` を設定するまで動かない。
 - 初回公開の手順（所有者の承認が必要）：Settings → Pages → Source を「GitHub Actions」にする → Settings → Variables に `PAGES_DEPLOY_ENABLED=true` → `main` へ push。
 - Action はコミット SHA で固定している。更新時は SHA とコメントのバージョンを合わせて変更する。

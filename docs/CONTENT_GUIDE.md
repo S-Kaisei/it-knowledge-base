@@ -240,21 +240,21 @@ LLM（technical-reviewer 等）の採点だけで技術的正確性を保証し�
 
 ## 9. 公開までの流れ
 
-1. **執筆**：`draft: true` で作成する（`/add-topic` では technical-writer が担当）。`docker compose exec web npm run content:check` を通す。
+1. **執筆**：`draft: true` で作成する（`/add-topic` では technical-writer が担当）。`docker compose exec web bun run content:check` を通す。
 2. **独立レビュー**：`technical-reviewer` を新しいコンテキストで起動し、ファイルパスだけを渡す（`/review-content`）。blocker / major を直し、全軸 4 点以上・blocker なしになるまで繰り返す。結果は [EVALUATION.md](./EVALUATION.md) §4 に LLM 評価として記録する。
 3. **表示確認**：下記 10 章の方法でライト / ダーク × デスクトップ / モバイルを確認する（図解・数式・表・シミュレーターを含む記事は必須）。
 4. **人間レビュー**：8 章のチェックポイントを人間が確認する。LLM の評価だけで公開しない。
-5. **公開**：人間の承認後に `draft: false` にする（`lastUpdated` は内容を変えた場合のみ更新）。公開記事になると下書きでは警告だった項目がエラーになり、公開記事から下書きへのリンクもエラーになるため、`content:check` と `docker compose run --rm qa npm run verify` を再実行する。
+5. **公開**：人間の承認後に `draft: false` にする（`lastUpdated` は内容を変えた場合のみ更新）。公開記事になると下書きでは警告だった項目がエラーになり、公開記事から下書きへのリンクもエラーになるため、`content:check` と `docker compose run --rm qa bun run verify` を再実行する。
 
 ## 10. 下書きのプレビュー
 
-下書きは本番ビルド（`npm run build`）に含まれない。
+下書きは本番ビルド（`bun run build`）に含まれない。
 
 - **開発サーバー**：`docker compose up -d --build web` → `http://127.0.0.1:5173/<category>/<slug>/`。下書きも表示され、記事冒頭に「下書き」の帯、サイドバーに「（下書き）」が付く。保存すると content index とルートが自動で更新される。検索は使えない（本番ビルドのみ）。
 - **静的ビルド + スクリーンショット**：本番と同じ HTML・Mermaid 描画を確認する場合。
 
   ```bash
-  docker compose run --rm qa npm run screenshots:drafts -- /fundamentals/cpu/
+  docker compose run --rm qa bun run screenshots:drafts -- /fundamentals/cpu/
   # → test-results/screenshots/<page>-<light|dark>-<desktop|mobile>.png
   ```
 

@@ -467,11 +467,15 @@ function checkSegment(rawArgv, ctx, out, depth) {
       break;
     case 'npm':
     case 'pnpm':
+    case 'bun':
     case 'yarn':
       if (['publish', 'unpublish', 'deprecate'].includes(argv[1])) out.push({ level: 'deny', reason: 'パッケージの公開操作は禁止されています' });
       if (argv[1] === 'run' && /^(deploy|publish|release)(:|$)/.test(argv[2] ?? '')) out.push({ level: 'ask', reason: 'デプロイ・公開系スクリプトの実行' });
       if (['login', 'adduser', 'token'].includes(argv[1])) out.push({ level: 'ask', reason: 'npm 認証情報の操作' });
+      if (cmd === 'bun' && argv[1] === 'x' && /^(gh-pages|vercel|netlify|wrangler|surge|firebase)(@|$)/.test(argv[2] ?? ''))
+        out.push({ level: 'ask', reason: '外部ホスティングへのデプロイ' });
       break;
+    case 'bunx':
     case 'npx':
       if (/^(gh-pages|vercel|netlify|wrangler|surge|firebase)(@|$)/.test(argv[1] ?? '')) out.push({ level: 'ask', reason: '外部ホスティングへのデプロイ' });
       break;

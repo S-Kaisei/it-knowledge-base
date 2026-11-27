@@ -45,7 +45,7 @@ export function classifyChanges(files) {
   return areas;
 }
 
-/** Decide which npm scripts to run, given the changed areas and available scripts. */
+/** Decide which package.json scripts to run, given the changed areas and available scripts. */
 export function selectGates(areas, scripts) {
   const has = (s) => Object.prototype.hasOwnProperty.call(scripts ?? {}, s);
   const gates = [];
@@ -69,7 +69,7 @@ export function selectGates(areas, scripts) {
     notes.push('Docker 設定が変更されています。`docker compose build` と該当サービスの起動確認を行ってください（Stop フックでは重いビルドを自動実行しません）');
   if (areas.has('ci')) notes.push('CI 設定が変更されています。ワークフローは GitHub 上でのみ完全に検証できます');
   if (areas.has('content') || areas.has('code'))
-    notes.push('静的ビルド・E2E は Stop フックでは実行しません。完了報告の前に `docker compose run --rm qa npm run verify` を実行してください');
+    notes.push('静的ビルド・E2E は Stop フックでは実行しません。完了報告の前に `docker compose run --rm qa bun run verify` を実行してください');
   return { gates, skipped, notes };
 }
 
@@ -124,10 +124,10 @@ function dockerStatus(project) {
 }
 
 function runGate(project, docker, gate) {
-  const npmArgs = ['run', gate.name, ...gate.args];
+  const runArgs = ['run', gate.name, ...gate.args];
   const args = docker.webRunning
-    ? ['compose', 'exec', '-T', 'web', 'npm', ...npmArgs]
-    : ['compose', 'run', '--rm', '--no-deps', '-T', 'web', 'npm', ...npmArgs];
+    ? ['compose', 'exec', '-T', 'web', 'bun', ...runArgs]
+    : ['compose', 'run', '--rm', '--no-deps', '-T', 'web', 'bun', ...runArgs];
   const display = `docker ${args.join(' ')}`;
   const r = run('docker', args, { cwd: project, timeoutMs: GATE_TIMEOUT_MS });
   return { ...r, display };

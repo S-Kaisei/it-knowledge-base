@@ -21,7 +21,7 @@ CPU・メモリからネットワーク、クラウド、AI までの IT 技術�
 - Docker（Docker Compose v2）と Git
 - Claude Code を使う場合のみ、ホストに Node.js 18 以上（Hooks の実行用）
 
-アプリの依存関係はコンテナ内にだけインストールします。ホストで `npm install` は不要です。
+アプリの依存関係はコンテナ内にだけインストールします。ホストで `bun install` は不要です（パッケージ管理は bun、実行環境は Node.js 26）。
 
 ## 使い方
 
@@ -31,14 +31,14 @@ docker compose up -d --build web
 docker compose logs -f web
 
 # 個別の検証
-docker compose exec web npm run typecheck
-docker compose exec web npm run lint
-docker compose exec web npm run content:check
-docker compose exec web npm run test
-docker compose exec web npm run build
+docker compose exec web bun run typecheck
+docker compose exec web bun run lint
+docker compose exec web bun run content:check
+docker compose exec web bun run test
+docker compose exec web bun run build
 
 # 総合品質ゲート（型・lint・コンテンツ・テスト・ビルド・リンク・E2E）
-docker compose run --rm qa npm run verify
+docker compose run --rm qa bun run verify
 
 # 本番相当（非 root の nginx）: http://127.0.0.1:8080
 docker compose --profile preview up -d --build preview
@@ -70,7 +70,7 @@ Claude Code では次のように依頼できます。
 
 ## 公開（GitHub Pages）
 
-`main` への push で CI（`npm run verify` と Docker の検証）が走り、成功すると検証済みの成果物をそのまま GitHub Pages に公開します。公開は初期状態では無効です。
+`main` への push で CI（`bun run verify` と Docker の検証）が走り、成功すると検証済みの成果物をそのまま GitHub Pages に公開します。公開は初期状態では無効です。
 
 1. Settings → Pages → Source を「GitHub Actions」にする
 2. Settings → Secrets and variables → Actions → Variables に `PAGES_DEPLOY_ENABLED` = `true` を追加する

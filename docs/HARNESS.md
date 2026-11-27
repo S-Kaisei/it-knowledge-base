@@ -38,7 +38,7 @@
 | `review-content` | ルーブリック 5 軸で記事を評価し、指摘を返す | `/review-content fundamentals` | なし |
 | `create-diagram` | Mermaid / SVG / React 図解の作成 | `/create-diagram TCPの3ウェイハンドシェイク` | ファイル編集 |
 | `develop` | 機能開発（Understand → … → Report） | `/develop 目次のスクロール連動` | ファイル編集 |
-| `verify-site` | `npm run verify` 等を Docker 経由で実行し結果を報告 | `/verify-site` | コンテナ実行、ビルド生成物。**手動起動のみ** |
+| `verify-site` | `bun run verify` 等を Docker 経由で実行し結果を報告 | `/verify-site` | コンテナ実行、ビルド生成物。**手動起動のみ** |
 | `release` | 公開前チェックとリリース手順 | `/release` | 公開に関わる。**手動起動のみ** |
 
 - `release` と `verify-site` は `disable-model-invocation: true` とし、ユーザーの明示的な呼び出しでのみ実行する（公開準備・重い検証のため）。その他の 5 つは自動起動可。
@@ -72,7 +72,7 @@
 ### guard-command の判定範囲
 
 - **deny**：ルート・ホーム・システムディレクトリ・プロジェクトルート・`.git`・広範囲ワイルドカードの削除、コンテナ内の `/app` 全体削除、`git push --force` / `-f`、`gh repo delete|archive`、`docker system prune` / `docker volume prune`、`--privileged` / `--cap-add` / ホスト名前空間 / `--device` / セキュリティプロファイル無効化、Docker ソケット・ホームなど広範囲のマウント、`sudo` / `su` / `doas`、`npm publish|unpublish|deprecate`、`dd of=/dev/…`、シャットダウン等のシステム操作、`--dangerously-skip-permissions`、`.env`・秘密鍵・`~/.ssh`・AWS / gh / Docker / Claude Code の認証情報・キーチェーンへの言及。
-- **ask**：`git push`（通常）、`--force-with-lease`、リモートブランチ削除、`git reset --hard`、`git clean -f`、`git checkout -- .`、`git restore`、ブランチの強制削除、stash 削除、履歴書き換え、`git config --global`、`gh pr` / `issue` の書き込み・`gh workflow` / `release` / `secret` / `variable` 操作・`gh api` の GET 以外、`docker compose down -v`、`docker volume rm`、各種 prune、イメージ削除、プロジェクト外の削除、対象不明の再帰削除、`npm run deploy|publish|release`、npm 認証、外部ホスティングへのデプロイ、`curl` / `wget` のアップロードや外部送信、`curl … | sh`、`rsync` の外部転送・`--delete`、`chmod -R 777`、環境変数の一覧表示、ネストが深すぎるコマンド、解析できない入力。
+- **ask**：`git push`（通常）、`--force-with-lease`、リモートブランチ削除、`git reset --hard`、`git clean -f`、`git checkout -- .`、`git restore`、ブランチの強制削除、stash 削除、履歴書き換え、`git config --global`、`gh pr` / `issue` の書き込み・`gh workflow` / `release` / `secret` / `variable` 操作・`gh api` の GET 以外、`docker compose down -v`、`docker volume rm`、各種 prune、イメージ削除、プロジェクト外の削除、対象不明の再帰削除、`bun run deploy|publish|release`、npm 認証、外部ホスティングへのデプロイ、`curl` / `wget` のアップロードや外部送信、`curl … | sh`、`rsync` の外部転送・`--delete`、`chmod -R 777`、環境変数の一覧表示、ネストが深すぎるコマンド、解析できない入力。
 - **解析方法**：`;` `&&` `||` `|` 改行で分割し、`$(…)` / バッククォート、`bash -c` / `sh -c` / `eval`、`docker compose exec|run <service> …`（コンテナ内として評価）を再帰的に検査する。`VAR=value`、`env` / `nice` / `ionice` / `stdbuf` / `nohup` / `time` / `timeout` / `xargs` などのラッパーを、値つきオプション（`nice -n 5` 等）も含めて取り除いてから判定する。
 - **heredoc**：`<<EOF … EOF` の本文はデータとして検査対象から外す（`.gitignore` に `.env` と書く等の誤検知を防ぐ）。ただし区切りがクォートされていない heredoc 内の `$(…)` / バッククォートは検査する。
 - **既知の限界**：文字列解析のヒューリスティックであり、セキュリティ境界ではない。変数展開・エイリアス・難読化、スクリプトファイルや別プロセス経由の操作、ネストした `$(…)` などは検出できない場合がある。settings.json の permissions、人間のレビュー、Docker の隔離と組み合わせて使う。
@@ -94,13 +94,13 @@
 
 | 変更されたパス | 実行するゲート |
 | --- | --- |
-| `src/`・`scripts/`・`tests/`・`.claude/hooks/`・package / tsconfig / `*.config.*` / lint・format 設定 | `npm run verify -- --quick`（`verify` が無ければ typecheck / lint / test） |
+| `src/`・`scripts/`・`tests/`・`.claude/hooks/`・package / tsconfig / `*.config.*` / lint・format 設定 | `bun run verify -- --quick`（`verify` が無ければ typecheck / lint / test） |
 | `src/content/`・`public/images/` のみ | `content:check` → `lint:md` → `test` |
 | その他の `.md` / `.mdx` のみ | `lint:md` |
 | Docker 設定・`.github/` | ゲートなし。`docker compose build` / GitHub 上での確認を促す注意を `systemMessage` で表示 |
 
 - ゲートは web コンテナが起動中なら `docker compose exec -T web`、停止中なら `docker compose run --rm --no-deps -T web` で実行する（タイムアウト 8 分、`IKB_STOP_CHECK_TIMEOUT_MS`）。最初の失敗で止め、出力末尾 60 行を `reason` に入れる。
-- コード・記事の変更時は「静的ビルド・E2E は Stop フックでは実行しない。完了報告前に `docker compose run --rm qa npm run verify` を実行する」旨を表示する。
+- コード・記事の変更時は「静的ビルド・E2E は Stop フックでは実行しない。完了報告前に `docker compose run --rm qa bun run verify` を実行する」旨を表示する。
 - `IKB_STOP_CHECK=off` で無効化できる。
 
 ### 終了コード / JSON の意味
@@ -127,12 +127,12 @@
 
 ## 6. Permissions
 
-- **最小権限**：`npm run typecheck` 等の通常検証コマンドを個別に許可する。`Bash(*)` は使わない。
-- **allow**：`docker compose exec web npm run typecheck|lint|lint:md|format|format:check|content:generate|content:check|test|build|links:check|verify`（`test -- *` と `verify -- --quick` を含む）、`docker compose run --rm qa npm run verify`（`-- --quick`）/ `npm run test:e2e`（`-- *`）/ `npx playwright test *` / `npm run screenshots:drafts`（`-- *`）、`docker compose up -d [--build] web`、preview の起動、`docker compose build *` / `logs *` / `ps` / `down` / `version`、`docker info`、`git status` / `diff` / `log` / `show` / `branch --show-current`、`node .claude/hooks/*`。
+- **最小権限**：`bun run typecheck` 等の通常検証コマンドを個別に許可する。`Bash(*)` は使わない。
+- **allow**：`docker compose exec web bun run typecheck|lint|lint:md|format|format:check|content:generate|content:check|test|build|links:check|verify`（`test -- *` と `verify -- --quick` を含む）、`docker compose run --rm qa bun run verify`（`-- --quick`）/ `bun run test:e2e`（`-- *`）/ `bun run playwright test *` / `bun run screenshots:drafts`（`-- *`）、`docker compose up -d [--build] web`、preview の起動、`docker compose build *` / `logs *` / `ps` / `down` / `version`、`docker info`、`git status` / `diff` / `log` / `show` / `branch --show-current`、`node .claude/hooks/*`。
 - **ask**：`git push *`、`git reset --hard *`、`git clean *`、`gh pr create|merge *`、`gh workflow run *`、`docker compose down -v|--volumes *`、`docker volume rm *`、`.claude/settings.json` と `.github/workflows/**` の編集。
-- **deny**：`git push --force|-f *`、`docker system prune *`、`docker volume prune *`、`npm publish *`、`sudo *`、`.env` / `.env.*` / `*.pem` / `*.key` / `~/.ssh` / `~/.aws` / `~/.config/gh` / `~/.docker/config.json` / `~/.claude/.credentials.json` の Read。
-- allow に無いコマンド（例：`npm run build:drafts`、`node scripts/screenshots.mjs`、`npx prettier --write`）は実行時に確認を求められる。
-- `docker compose exec *` のような包括許可をしない（`exec` 以降の任意コマンドが実行できるため）。許可は `docker compose exec web npm run lint` のように完全指定する。
+- **deny**：`git push --force|-f *`、`docker system prune *`、`docker volume prune *`、`npm publish *` / `bun publish *`、`sudo *`、`.env` / `.env.*` / `*.pem` / `*.key` / `~/.ssh` / `~/.aws` / `~/.config/gh` / `~/.docker/config.json` / `~/.claude/.credentials.json` の Read。
+- allow に無いコマンド（例：`bun run build:drafts`、`node scripts/screenshots.mjs`、`bun run prettier --write`）は実行時に確認を求められる。
+- `docker compose exec *` のような包括許可をしない（`exec` 以降の任意コマンドが実行できるため）。許可は `docker compose exec web bun run lint` のように完全指定する。
 - `.env`、秘密鍵、認証情報の Read を deny する。
 - 評価順は deny → ask → allow（最初の一致が優先）。複合コマンドは全サブコマンドが一致する必要がある。
 - `--dangerously-skip-permissions` を前提にしない。
@@ -155,7 +155,7 @@
 | `/create-diagram <対象と図の種類>` | 既存記事を読み、Mermaid / SVG を作成 → 本文に説明を追加 → Mermaid 構文検証 |
 | `/review-content fundamentals` | technical-reviewer がカテゴリ内記事を 5 軸評価。編集はしない |
 | `/develop <機能>` | Understand → Plan → Implement → Review → Verify → Fix → Re-verify → Report |
-| `/verify-site` | `docker compose run --rm qa npm run verify` を実行し、各ステップ結果と未検証項目を報告（ユーザーの手動起動のみ） |
+| `/verify-site` | `docker compose run --rm qa bun run verify` を実行し、各ステップ結果と未検証項目を報告（ユーザーの手動起動のみ） |
 | `/release` | ユーザーが手動起動。verify 成功・draft 除外・base path を確認し、公開手順を案内（公開操作はユーザー承認後） |
 
 ## 9. 検証済みの動作

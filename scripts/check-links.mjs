@@ -12,7 +12,7 @@ const base = basePath();
 const checkExternal = process.argv.includes('--external');
 
 if (!fs.existsSync(root)) {
-  console.error(`links:check: ${path.relative(PROJECT_ROOT, root)} がありません。先に npm run build を実行してください`);
+  console.error(`links:check: ${path.relative(PROJECT_ROOT, root)} がありません。先に bun run build を実行してください`);
   process.exit(1);
 }
 

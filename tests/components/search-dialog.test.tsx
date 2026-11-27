@@ -126,7 +126,7 @@ describe('SearchDialog', () => {
     const user = userEvent.setup();
     renderSearch(() => Promise.reject(new PagefindUnavailableError(new TypeError('Failed to fetch dynamically imported module'))));
     await user.click(screen.getByRole('button', { name: 'サイト内検索を開く' }));
-    expect(await screen.findByText('検索インデックスは本番ビルド後に利用できます（npm run build）')).toBeInTheDocument();
+    expect(await screen.findByText('検索インデックスは本番ビルド後に利用できます（bun run build）')).toBeInTheDocument();
   });
 
   it('shows an error state when the search fails', async () => {

@@ -1,30 +1,38 @@
 # syntax=docker/dockerfile:1.10
 # Multi-stage build: deps → dev / qa / builder → production
 # Node.js version must match .node-version and the CI workflow (ADR-0002).
+# Bun is the package manager / script runner; Node.js stays the JavaScript runtime (ADR-0010).
 ARG NODE_VERSION=26.13.1
+ARG BUN_VERSION=1.4.5
 ARG NGINX_VERSION=1.31.7
+
+FROM oven/bun:${BUN_VERSION}-debian AS bun
 
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-bookworm-slim AS base
-ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
-    NPM_CONFIG_FUND=false \
-    NPM_CONFIG_AUDIT=false
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+ENV BUN_INSTALL_CACHE_DIR=/home/node/.bun/install/cache
 WORKDIR /app
-RUN chown node:node /app
+# git: hooks and tests/harness create throw-away git repositories (needed in both web and qa).
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && rm -rf /var/lib/apt/lists/* \
+ && ln -s /usr/local/bin/bun /usr/local/bin/bunx \
+ && chown node:node /app
 
 # ---------------------------------------------------------------------------
-# deps: install exactly what package-lock.json says (as the unprivileged "node" user)
+# deps: install exactly what bun.lock says (as the unprivileged "node" user)
 FROM base AS deps
 USER node
-COPY --chown=node:node package.json package-lock.json ./
-RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 npm ci
+COPY --chown=node:node package.json bun.lock ./
+RUN --mount=type=cache,target=/home/node/.bun/install/cache,uid=1000,gid=1000 bun install --frozen-lockfile
 
 # ---------------------------------------------------------------------------
 # dev: Vite dev server with HMR. Source is bind-mounted by compose.yaml.
 FROM deps AS dev
 COPY --chown=node:node . .
 EXPOSE 5173
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]
 
 # ---------------------------------------------------------------------------
 # qa: Playwright + Chromium. Browsers are installed by the same @playwright/test
@@ -32,15 +40,13 @@ CMD ["npm", "run", "dev"]
 FROM deps AS qa
 USER root
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-# git: tests/harness creates throw-away git repositories to exercise the hooks.
-RUN npx playwright install --with-deps chromium \
- && apt-get install -y --no-install-recommends git \
+RUN ./node_modules/.bin/playwright install --with-deps chromium \
  && chmod -R a+rX /ms-playwright \
  && rm -rf /var/lib/apt/lists/*
 USER node
 COPY --chown=node:node . .
 ENV CI=true
-CMD ["npm", "run", "verify"]
+CMD ["bun", "run", "verify"]
 
 # ---------------------------------------------------------------------------
 # builder: static site generation (build/client)
@@ -48,7 +54,7 @@ FROM deps AS builder
 ARG BASE_PATH=/
 ENV BASE_PATH=${BASE_PATH}
 COPY --chown=node:node . .
-RUN npm run build \
+RUN bun run build \
  && sed "s#__BASE_PATH__#${BASE_PATH}#g" docker/nginx.conf > /tmp/default.conf
 
 # ---------------------------------------------------------------------------

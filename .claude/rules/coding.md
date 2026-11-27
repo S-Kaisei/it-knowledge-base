@@ -36,4 +36,4 @@ paths:
 - ESLint / Prettier の警告を無視・一括disableしない。`eslint-disable` は行単位かつ理由コメント付き。
 - 未使用コード・デバッグ用 `console.log` を残さない。
 - 依存追加は必要最小限、バージョン固定。shadcn/ui は必要なコンポーネントだけ追加する。
-- 変更後は `docker compose exec web npm run typecheck` と `lint`、ロジック変更時は `test` を実行する。
+- 変更後は `docker compose exec web bun run typecheck` と `lint`、ロジック変更時は `test` を実行する。

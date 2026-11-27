@@ -13,11 +13,11 @@ export function summarize({ branch, changed, dockerOk, webRunning, hasPackageJso
   );
   if (!dockerOk) lines.push('- Docker: 利用不可。品質ゲートは実行できないため、検証結果は「未検証」として報告すること');
   else lines.push(`- Docker: 利用可能 / web コンテナ: ${webRunning ? '起動中' : '停止中（`docker compose up -d --build web` で起動）'}`);
-  if (!hasPackageJson) lines.push('- package.json 未作成（初期構築中）。npm スクリプトに依存する検証はスキップされます');
+  if (!hasPackageJson) lines.push('- package.json 未作成（初期構築中）。package.json のスクリプトに依存する検証はスキップされます');
   else if (dockerOk && !hasNodeModulesVolume && !webRunning)
     lines.push('- 依存関係が未インストールの可能性があります（初回は `docker compose up -d --build web`）');
   lines.push('');
-  lines.push('主要コマンド: `docker compose exec web npm run typecheck|lint|test|build` / `docker compose run --rm qa npm run verify`');
+  lines.push('主要コマンド: `docker compose exec web bun run typecheck|lint|test|build` / `docker compose run --rm qa bun run verify`');
   lines.push('作業ループ: Understand → Plan → Implement → Review → Verify → Fix → Re-verify → Report（詳細は CLAUDE.md）');
   return lines.join('\n');
 }

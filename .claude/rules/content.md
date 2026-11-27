@@ -43,6 +43,6 @@ paths:
 
 ## 検証
 
-- 記事を変更したら `docker compose exec web npm run content:check` を実行する。
-- 表示確認（下書きを含む）: `docker compose run --rm qa npm run screenshots:drafts -- /<category>/<slug>/`。
+- 記事を変更したら `docker compose exec web bun run content:check` を実行する。
+- 表示確認（下書きを含む）: `docker compose run --rm qa bun run screenshots:drafts -- /<category>/<slug>/`。
 - 公開前に `technical-reviewer` による5軸レビューで全軸4点以上。重大な誤り・出典捏造・転載は公開不可。

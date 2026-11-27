@@ -7,7 +7,7 @@ import { type PagefindApi, type SearchOption, parseExcerpt, wrapIndex } from '~/
 import { cn } from '~/lib/utils';
 import { PagefindUnavailableError } from './pagefind';
 
-export const DEV_INDEX_MESSAGE = '検索インデックスは本番ビルド後に利用できます（npm run build）';
+export const DEV_INDEX_MESSAGE = '検索インデックスは本番ビルド後に利用できます（bun run build）';
 export const NO_RESULTS_MESSAGE = '一致する記事が見つかりませんでした';
 
 const isUnavailable = (e: unknown) => e instanceof PagefindUnavailableError;

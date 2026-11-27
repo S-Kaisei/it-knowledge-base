@@ -3,7 +3,7 @@
 // Capture review screenshots (light/dark × desktop/mobile) of pages from a static build.
 // Used by the visual-reviewer agent and the create-diagram skill. Output: test-results/screenshots/<name>-<theme>-<device>.png
 // Usage: node scripts/screenshots.mjs [--dir build-drafts/client] [--base /] <path> [<path> ...]
-//   e.g. npm run build:drafts && node scripts/screenshots.mjs --dir build-drafts/client /fundamentals/cpu/
+//   e.g. bun run screenshots:drafts -- /fundamentals/cpu/
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';

@@ -2,6 +2,8 @@
 
 > プロジェクトの原典となる要件定義。設計判断の詳細は `docs/decisions/`（ADR）、現在の実装状況は `docs/ARCHITECTURE.md` を参照する。
 > 要件を変更する場合は、このファイルを直接書き換えずに ADR を追加し、必要に応じて本書へ追記する。
+>
+> 変更履歴: 2026-11-28 パッケージマネージャーを npm から bun に変更（[ADR-0010](decisions/0010-bun-package-manager.md)）。本文中の npm / `npm ci` / `package-lock.json` は bun / `bun install --frozen-lockfile` / `bun.lock` と読み替える。
 
 ## 1. ミッション
 

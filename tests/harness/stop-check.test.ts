@@ -73,10 +73,10 @@ describe('stop-check: サブプロセス', () => {
     n += 1;
     R().write('src/a.ts', `export const a = ${n + 100};\n`);
   };
-  const npmCalls = () =>
+  const runCalls = () =>
     R()
       .dockerCalls()
-      .filter((c) => c.includes(' npm '));
+      .filter((c) => c.includes(' bun run '));
 
   it('H12: クリーンな作業ツリー → 出力なし・docker を呼ばない', () => {
     setup();
@@ -102,7 +102,7 @@ describe('stop-check: サブプロセス', () => {
     const r = stop({}, { FAKE_DOCKER: 'fail' });
     expect(r.status).toBe(0);
     expect(r.json?.decision).toBe('block');
-    expect(r.json?.reason).toContain('npm run verify -- --quick');
+    expect(r.json?.reason).toContain('bun run verify -- --quick');
     expect(r.json?.reason).toContain('FAKE GATE FAILURE: lint exploded');
     expect(r.json?.reason).toContain('1/3');
     const state = JSON.parse(fs.readFileSync(path.join(R().dir, '.claude/.state/stop-check.json'), 'utf8')) as { sessions: { s1: { failures: number } } };
@@ -143,7 +143,7 @@ describe('stop-check: サブプロセス', () => {
     const second = stop({ stop_hook_active: true }, { FAKE_DOCKER: 'unavailable' });
     expect(second.status).toBe(0);
     expect(second.stdout.trim()).toBe('');
-    expect(npmCalls()).toEqual([]);
+    expect(runCalls()).toEqual([]);
   });
 
   it('ゲート通過 → 品質ゲート通過を通知。同じ fingerprint では docker を再実行しない', () => {
@@ -152,13 +152,13 @@ describe('stop-check: サブプロセス', () => {
     const r1 = stop();
     expect(r1.json?.decision).toBeUndefined();
     expect(r1.json?.systemMessage).toContain('品質ゲート通過');
-    expect(npmCalls()).toHaveLength(1);
+    expect(runCalls()).toHaveLength(1);
     const r2 = stop();
     expect(r2.stdout.trim()).toBe('');
-    expect(npmCalls()).toHaveLength(1);
+    expect(runCalls()).toHaveLength(1);
     touchCode(); // a new change triggers the gate again
     stop();
-    expect(npmCalls()).toHaveLength(2);
+    expect(runCalls()).toHaveLength(2);
   });
 
   it('記事のみの変更 → content:check → lint:md → test を順に実行する', () => {
@@ -166,7 +166,7 @@ describe('stop-check: サブプロセス', () => {
     R().write('src/content/fundamentals/a.mdx', '---\n---\n');
     const r = stop();
     expect(r.json?.systemMessage).toContain('品質ゲート通過');
-    expect(npmCalls().map((c) => c.split('npm run ')[1])).toEqual(['content:check', 'lint:md', 'test']);
+    expect(runCalls().map((c) => c.split('bun run ')[1])).toEqual(['content:check', 'lint:md', 'test']);
   });
 
   it('バックグラウンドタスク実行中 → 保留（docker 未呼び出し・block なし）', () => {
