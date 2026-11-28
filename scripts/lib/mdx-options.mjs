@@ -27,6 +27,24 @@ export function remarkMermaid() {
   };
 }
 
+/**
+ * Numbers <PastExam> elements in document order (1, 2, …) by setting their `number` attribute.
+ * The visible 「過去問 N」 comes from a CSS counter (app.css), but CSS generated content is not reliably
+ * part of the accessible name, so the same N is computed here at build time for aria-label.
+ * Document (pre-)order is the order the CSS counter increments in, so both always agree.
+ */
+export function remarkPastExamNumbers() {
+  return (tree) => {
+    let n = 0;
+    visit(tree, (node) => {
+      if ((node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') || node.name !== 'PastExam') return;
+      n += 1;
+      node.attributes = node.attributes.filter((a) => !(a.type === 'mdxJsxAttribute' && a.name === 'number'));
+      node.attributes.push({ type: 'mdxJsxAttribute', name: 'number', value: String(n) });
+    });
+  };
+}
+
 /** Light/dark Shiki themes. Colors are emitted as CSS variables and switched by [data-theme] in app.css. */
 export const SHIKI_THEMES = { light: 'github-light-default', dark: 'github-dark-default' };
 
@@ -77,7 +95,7 @@ export function mdxOptions(opts = {}) {
   return {
     format: 'mdx',
     providerImportSource: '@mdx-js/react',
-    remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMath, remarkMermaid],
+    remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMath, remarkMermaid, remarkPastExamNumbers],
     rehypePlugins: [
       rehypeSlug,
       [rehypeKatex, { throwOnError: false, strict: 'ignore', output: 'htmlAndMathml' }],

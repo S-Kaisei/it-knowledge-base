@@ -54,6 +54,14 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page);
     });
 
+    test('過去問の正解と解説を開いた状態に WCAG 違反がない', async ({ page }) => {
+      await page.goto('/fundamentals/fixture-basics/');
+      for (const summary of await page.locator('.past-exam-answer > summary').all()) await summary.click();
+      await expect(page.getByRole('group', { name: '過去問 1' }).getByText('正解：イ')).toBeVisible();
+      await expect(page.getByRole('group', { name: '過去問 2' }).getByText('正解：ウ')).toBeVisible();
+      await audit(page);
+    });
+
     test.describe('モバイル幅', () => {
       test.use({ viewport: { width: 375, height: 800 } });
 

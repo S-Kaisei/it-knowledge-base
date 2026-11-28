@@ -505,6 +505,79 @@
     color: var(--muted);
   }
 
+  /* 過去問: 「過去問 N」の N は記事内の出現順（CSS counter）。名前は aria-labelledby でラベルから付ける。 */
+  .prose-ikb {
+    counter-reset: past-exam;
+  }
+  .prose-ikb .past-exam {
+    counter-increment: past-exam;
+    margin: 0 0 1.6em;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+  }
+  .prose-ikb .past-exam-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    background: var(--surface);
+  }
+  .prose-ikb .past-exam-label {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--accent-text);
+  }
+  .prose-ikb .past-exam-label::after {
+    content: ' ' counter(past-exam);
+  }
+  .prose-ikb .past-exam-source {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .prose-ikb .past-exam-body {
+    padding: 14px 18px 0;
+  }
+  .prose-ikb .past-exam-body > :last-child {
+    margin-bottom: 0;
+  }
+  /* 選択肢（問題文直下のリスト）は「ア」「イ」… が記号の役割を持つため行頭記号を付けない。 */
+  .prose-ikb .past-exam-body > ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .prose-ikb .past-exam-answer {
+    margin: 0 -18px;
+    border-top: 1px solid var(--border);
+  }
+  .prose-ikb .past-exam-answer > summary {
+    display: list-item;
+    min-height: 24px;
+    padding: 10px 18px;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+  .prose-ikb .past-exam-answer > summary:focus-visible {
+    outline-offset: -2px;
+  }
+  .prose-ikb .past-exam-answer-body {
+    padding: 0 18px 4px;
+    font-size: 15px;
+  }
+  .prose-ikb .past-exam-correct strong {
+    color: var(--accent-text);
+  }
+
   .prose-ikb .mermaid-error {
     margin: 0 0 8px;
     padding: 10px 14px;

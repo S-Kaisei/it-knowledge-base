@@ -61,6 +61,11 @@ fixture は `tests/harness/` に置く。危険な操作は実際には実行せ
 
 | 日付 | 記事 slug | 評価者（人間 / LLM） | 正確性 | 分かりやすさ | 図解・例 | 文章・構成 | 出典 | 判定 | 備考 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-28 | 全 15 記事（ADR-0011 改修） | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | 図の配置・覚え方・IPA 過去問を追加。各記事を technical-reviewer で独立レビューし、全軸 4 点以上・major 解消後に公開。過去問は問題文をページ画像、正解を解答例で照合。関連の薄い問題は削除し件数を明記（docker 6・ai-agent 7・ci-cd 7・dns 9、他は 10） |
+| 2026-11-28 | cache-memory / cpu / virtual-memory / memory-and-storage（改修） | LLM（technical-reviewer） | 4〜5 | 4〜5 | 5 | 4〜5 | 4 | 公開可 | 過去問 40 問すべて一致。major：cache のコヒーレンシの一般化（修正済み）。memory の「インタリーブ」表記の指摘はオーケストレーターが PDF 拡大で原文どおりと確認 |
+| 2026-11-28 | os-basics / process-and-thread / system-performance-availability / raid（改修） | LLM（technical-reviewer） | 4〜5 | 4〜5 | 4〜5 | 4〜5 | 4〜5 | 公開可 | major：モード切替の範囲、ノンプリエンプティブの定義、覚え方のネタバレ、関連の薄い過去問（RAID の SAN・RPO を FE/IP の RAID 問題に差替え、オーケストレーターが照合）。いずれも修正済み |
+| 2026-11-28 | tcp-ip-basics / dns / http-https / docker（改修） | LLM（technical-reviewer） | 4〜5 | 4〜5 | 4〜5 | 3〜5 | 3〜5 | 公開可（修正後） | major：RFC 1122 の帰属、「署名なら DNSSEC」の覚え方、docker の打ち直し誤記（シストリック）と関連の薄い 2 問。修正済み、追加分の過去問はオーケストレーターが照合 |
+| 2026-11-28 | llm / ai-agent / ci-cd（改修） | LLM（technical-reviewer） | 4 | 4 | 4〜5 | 4 | 3〜5 | 公開可（修正後） | major：NIST の基盤モデル定義の引用範囲、教師なし学習の扱い、サンドボックスの言い過ぎ、関連の薄い過去問の削除。ci-cd の括弧表記はオーケストレーターが PDF 拡大で全角と確認 |
 | 2026-11-28 | ci-cd / llm / ai-agent / raid | 公開判断（オーナー委任） | — | — | — | — | — | 公開 | 独立レビューで全軸 4 点以上・blocker / major なし、かつ全品質ゲート通過を条件に公開。NIST AI 600-1・OWASP 2026 はオーケストレーターが原文で照合。人間による精読は省略 |
 | 2026-11-28 | llm | LLM（technical-reviewer、2回目） | 4 | 4 | 5 | 4 | 4 | 公開可 | 1回目は major 1（RLHF の報酬モデル段階が欠落）。minor（節番号・√d_k の理由・grounding の扱い）を反映 |
 | 2026-11-28 | llm | LLM（technical-reviewer、1回目） | 4 | 4 | 4 | 4 | 4 | 要修正 | major 1・minor 9 |

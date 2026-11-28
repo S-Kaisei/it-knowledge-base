@@ -136,6 +136,48 @@ test.describe('記事の表示機能（fixture）', () => {
     expect(top).toBeLessThan(200);
   });
 
+  test('過去問は「過去問 N」の名前・出典・行頭記号なしの選択肢で表示され、正解は開くまで隠れている', async ({ page }) => {
+    const t = trackErrors(page);
+    await page.goto(ARTICLE);
+    // N comes from a CSS counter in document order; the group's accessible name includes it.
+    const first = page.getByRole('group', { name: '過去問 1' });
+    const second = page.getByRole('group', { name: '過去問 2' });
+    await expect(first).toBeVisible();
+    await expect(second).toBeVisible();
+    await expect(first.getByText('出典：令和7年度 秋期 応用情報技術者試験 午前 問1', { exact: true })).toBeVisible();
+    await expect(second.getByText('出典：平成31年度 春期 基本情報技術者試験 午前 問2（一部改変）', { exact: true })).toBeVisible();
+    // Markdown (table, inline KaTeX) works inside the question.
+    await expect(first.locator('.katex').first()).toBeVisible();
+    await expect(first.getByRole('region', { name: '表' })).toBeVisible();
+
+    const choices = first.locator('.past-exam-body > ul');
+    await expect(choices.getByRole('listitem')).toHaveCount(4);
+    expect(await choices.evaluate((el) => getComputedStyle(el).listStyleType)).toBe('none');
+
+    // The answer is closed by default and opens with the summary (also from the keyboard).
+    const correct = first.getByText('正解：イ');
+    await expect(correct).toBeHidden();
+    await first.getByText('正解と解説').click();
+    await expect(correct).toBeVisible();
+    await expect(first.locator('details')).toHaveAttribute('open', '');
+
+    const secondCorrect = second.getByText('正解：ウ');
+    await expect(secondCorrect).toBeHidden();
+    await second.getByText('正解と解説').focus();
+    await page.keyboard.press('Enter');
+    await expect(secondCorrect).toBeVisible();
+    t.expectNone();
+  });
+
+  test('狭い画面でも過去問がページを横にはみ出さない', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto(ARTICLE);
+    const exam = page.getByRole('group', { name: '過去問 1' });
+    await exam.getByText('正解と解説').click();
+    await expect(exam.getByText('正解：イ')).toBeVisible();
+    expect(await hasHorizontalOverflow(page)).toBe(false);
+  });
+
   test('記事ページでコンソールエラーが出ない', async ({ page }) => {
     const t = trackErrors(page);
     await page.goto(ARTICLE);
