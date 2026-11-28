@@ -9,6 +9,7 @@ import { CodeBlock } from './code-block';
 import { Figure } from './figure';
 import type { MdxComponentName } from './mdx-component-names';
 import { Misconceptions } from './misconceptions';
+import { PastExam, PastExamAnswer } from './past-exam';
 
 /** Internal links go through React Router (applies the base path); external links open normally. */
 function Anchor({ href = '', children, ...rest }: ComponentProps<'a'>) {
@@ -78,6 +79,8 @@ const customComponents = {
   Figure,
   Mermaid,
   Misconceptions,
+  PastExam,
+  PastExamAnswer,
 } satisfies Record<MdxComponentName, unknown>;
 
 export const mdxComponents: MDXComponents = {

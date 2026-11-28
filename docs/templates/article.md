@@ -29,7 +29,7 @@ references:
 - 注記はすべて MDX コメント（波括弧とスラッシュ・アスタリスクで囲む形式）で書いてある。表示されないので残してもよいが、書き終えたら削除する。HTML コメント（<!-- -->）は MDX では構文エラーになるので使わない。
 - h1 は書かない（タイトルは frontmatter から表示される）。見出しは h2 → h3 の順。
 - 「関連記事」と「参考資料・出典」は frontmatter の related / prerequisites / references から記事末尾に自動表示される。本文に同じ節を書かない。
-- 使える MDX コンポーネント（Callout / Figure / Misconceptions / Mermaid / 数式 / コードブロック）は docs/CONTENT_GUIDE.md の 5 章。
+- 使える MDX コンポーネント（Callout / Figure / Misconceptions / Mermaid / PastExam / 数式 / コードブロック）は docs/CONTENT_GUIDE.md の 5 章、過去問は 11 章。
 
 */}
 
@@ -82,9 +82,8 @@ TODO: この例えが当てはまらない点
 
 TODO: 仕組みの説明
 
-## 図解
-
 {/*
+図・表・シミュレーターは、説明している段落の直前・直後に置く（独立した「図解」節は作らない。ADR-0011）。
 Mermaid（mermaid コードフェンス）、SVG / 画像（<Figure />）、比較表など。図の内容は本文でも説明し、図だけに依存しない。
 */}
 
@@ -94,6 +93,14 @@ flowchart LR
 ```
 
 TODO: 図の説明文（図が表している流れを本文でも説明する）
+
+{/*
+覚え方：理屈で覚えるための手がかり（因果・対比・数値の導き方・図との対応）。語呂合わせだけにしない。
+*/}
+
+<Callout type="tip" title="覚え方">
+TODO: 覚え方
+</Callout>
 
 ## 実務での活用例
 
@@ -133,10 +140,30 @@ TODO: 活用例
 
 TODO: まとめ
 
-## 理解度チェック（任意）
+## 理解度チェック
 
 {/*
-必要な場合のみ。2〜3 問。答えと解説を <details> で折りたたむ。不要ならこの節ごと削除。
+記事固有の理解を確かめる自作の問題を 2〜3 問。答えと解説を <details> で折りたたむ。IPA の過去問は次の節に分ける。
 */}
 
-TODO: 確認問題（不要ならこの節を削除）
+TODO: 確認問題
+
+## 過去問題
+
+{/*
+IPA 過去問を目標 10 問（docs/CONTENT_GUIDE.md 11 章）。問題文は IPA の問題 PDF を見て打ち直し、正解は解答例 PDF で確認する。
+関連する問題が 10 問に満たない場合は数を埋めず、この節の冒頭に「現時点で関連する過去問は N 問です」と書く。
+*/}
+
+<PastExam source="TODO: 令和N年度 秋期 応用情報技術者試験 午前 問N">
+TODO: 問題文
+
+- ア　TODO
+- イ　TODO
+- ウ　TODO
+- エ　TODO
+
+<PastExamAnswer answer="ア">
+TODO: 解説（自分の言葉で。本文のどの節と対応するか）
+</PastExamAnswer>
+</PastExam>

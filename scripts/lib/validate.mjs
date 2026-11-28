@@ -2,7 +2,7 @@
 // Items that need human/technical review are listed in HUMAN_REVIEW_ITEMS and never auto-passed.
 import fs from 'node:fs';
 import path from 'node:path';
-import { compile } from '@mdx-js/mdx';
+import { compile, createProcessor } from '@mdx-js/mdx';
 import matter from 'gray-matter';
 import katex from 'katex';
 import remarkFrontmatter from 'remark-frontmatter';
@@ -10,6 +10,14 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { visit } from 'unist-util-visit';
 import { MDX_COMPONENT_NAMES } from '../../src/components/article/mdx-component-names.ts';
+import {
+  PAST_EXAM_ANSWERS,
+  PAST_EXAM_SOURCE_EXAMPLE,
+  PAST_EXAM_TARGET,
+  isPastExamAnswer,
+  isValidPastExamSource,
+  normalizePastExamSource,
+} from '../../src/lib/past-exam.ts';
 import { PROJECT_ROOT, articlePath, buildContentIndex, contentDir, loadCategories, readArticles } from './content.mjs';
 
 /**
@@ -36,6 +44,96 @@ export async function checkMath(source) {
   };
   await compile(source, { format: 'mdx', remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMath, collect] });
   return problems;
+}
+
+const isJsx = (node) => node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement';
+
+/**
+ * Value of a JSX attribute: string for `a="x"`, true for a bare `a`, undefined when absent,
+ * and `{ expression }` for `a={...}` (not statically checkable here).
+ */
+function jsxAttribute(node, name) {
+  const attr = node.attributes.find((a) => a.type === 'mdxJsxAttribute' && a.name === name);
+  if (!attr) return undefined;
+  if (attr.value === null || attr.value === undefined) return true;
+  if (typeof attr.value === 'string') return attr.value;
+  return { expression: attr.value.value };
+}
+
+/**
+ * IPA past exam questions (<PastExam> / <PastExamAnswer>), checked on the MDX syntax tree.
+ * Errors: missing / malformed source, not exactly one PastExamAnswer per PastExam, answer outside
+ * ア〜コ, PastExamAnswer outside PastExam, the same source twice in one article.
+ * @param {string} source whole file (frontmatter included, so positions are file lines)
+ * @returns {{ count: number, problems: Array<{ line?: number, message: string }> }}
+ */
+export function checkPastExams(source) {
+  const tree = createProcessor({ format: 'mdx', remarkPlugins: [remarkFrontmatter, remarkGfm, remarkMath] }).parse(source);
+  const problems = [];
+  const seen = new Map(); // normalized source → line of first use
+  let count = 0;
+
+  /** PastExamAnswer elements inside a PastExam (not descending into a nested PastExam). */
+  const answersIn = (node) => {
+    const found = [];
+    const walk = (n) => {
+      for (const child of n.children ?? []) {
+        if (isJsx(child) && child.name === 'PastExam') continue;
+        if (isJsx(child) && child.name === 'PastExamAnswer') found.push(child);
+        walk(child);
+      }
+    };
+    walk(node);
+    return found;
+  };
+
+  const walk = (node, inPastExam) => {
+    for (const child of node.children ?? []) {
+      if (!isJsx(child)) {
+        walk(child, inPastExam);
+        continue;
+      }
+      const line = child.position?.start.line;
+      if (child.name === 'PastExam') {
+        count++;
+        checkQuestion(child, line);
+        walk(child, true);
+        continue;
+      }
+      if (child.name === 'PastExamAnswer') {
+        const answer = jsxAttribute(child, 'answer');
+        if (!isPastExamAnswer(answer)) {
+          const shown = answer === undefined ? 'なし' : typeof answer === 'string' ? `「${answer}」` : '文字列以外';
+          problems.push({ line, message: `<PastExamAnswer> の answer が不正です（${shown}）。使える値: ${PAST_EXAM_ANSWERS.join(' ')}` });
+        }
+        if (!inPastExam) problems.push({ line, message: '<PastExamAnswer> が <PastExam> の外にあります' });
+      }
+      walk(child, inPastExam);
+    }
+  };
+
+  const checkQuestion = (node, line) => {
+    const src = jsxAttribute(node, 'source');
+    if (src === undefined || src === true || (typeof src === 'string' && !src.trim())) {
+      problems.push({ line, message: `<PastExam> に source（出典）がありません。例: source="${PAST_EXAM_SOURCE_EXAMPLE}"` });
+    } else if (typeof src !== 'string') {
+      problems.push({ line, message: '<PastExam> の source は文字列リテラル（source="..."）で書いてください' });
+    } else if (!isValidPastExamSource(src)) {
+      problems.push({
+        line,
+        message: `<PastExam> の source の形式が不正です: 「${src}」（例: 「${PAST_EXAM_SOURCE_EXAMPLE}」。年度・試験区分・問番号を空白区切りで書く）`,
+      });
+    } else {
+      const key = normalizePastExamSource(src);
+      if (seen.has(key)) problems.push({ line, message: `同じ出典の過去問が重複しています: 「${key}」（${seen.get(key)} 行目と同じ）` });
+      else seen.set(key, line);
+    }
+    const answers = answersIn(node);
+    if (answers.length !== 1) problems.push({ line, message: `<PastExam> の中に <PastExamAnswer> がちょうど 1 つ必要です（${answers.length} 個あります）` });
+  };
+
+  walk(tree, false);
+  return { count, problems };
 }
 
 export const REQUIRED_FIELDS = [
@@ -266,6 +364,18 @@ export async function validateContent({ dir = contentDir(), publicDir = path.joi
         if (errors[i].file === file && !errors[i].line && errors[i].message.startsWith('数式をレンダリングできません')) errors.splice(i, 1);
       }
       for (const p of mathProblems) errors.push({ file, line: p.line, message: `数式をレンダリングできません: ${p.message}` });
+    }
+    // Past exam questions (drafts included: a malformed source / answer is a structural error either way).
+    // MDX syntax errors were already reported by the compile step above, so a parse failure is skipped here.
+    let pastExams;
+    try {
+      pastExams = checkPastExams(fs.readFileSync(a.abs, 'utf8'));
+    } catch {
+      pastExams = null;
+    }
+    if (pastExams) {
+      for (const p of pastExams.problems) errors.push({ file, line: p.line, message: p.message });
+      if (!isDraft && pastExams.count < PAST_EXAM_TARGET) warnings.push({ file, message: `過去問が ${pastExams.count} 問です（目標 ${PAST_EXAM_TARGET} 問）` });
     }
     for (const { line } of figuresWithoutAlt(a.body, a.bodyStartLine)) errors.push({ file, line, message: '<Figure src> に代替テキスト（alt）がありません' });
 

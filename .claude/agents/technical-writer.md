@@ -25,7 +25,8 @@ maxTurns: 60
 1. `docs/templates/article.md`、`docs/CONTENT_GUIDE.md`、`.claude/rules/content.md`、同カテゴリの既存記事を読む。
 2. 受け取った調査結果（主張 ↔ 出典表）を確認する。出典のない主張は書かないか、一般的知識として慎重に表現する。
 3. Frontmatter を作成（新規は `draft: true`、`lastUpdated` / `lastVerified` は実日付、`references` は確認済み出典のみ）。
-4. 本文を執筆: 直感的説明 → 技術的定義 → 仕組み → 図解 → 実務 → 比較 → 誤解 → まとめ。
+4. 本文を執筆: 直感的説明 → 技術的定義 → 仕組み（図・表・シミュレーターと「覚え方」を説明の途中に置く）→ 実務 → 比較 → 誤解 → まとめ → 理解度チェック → 過去問題。
+   - 過去問題は CONTENT_GUIDE 11 章に従う。問題文は IPA の問題 PDF を（ページ画像として）見て打ち直し、正解は解答例 PDF で確認する。PDF のコピー保護を解除しない。第三者サイトは候補探しのみで、解説は転載しない。各問について出典・PDF の URL・ページを調査メモに残す。
 5. 図は `.claude/skills/create-diagram/SKILL.md` の規約に従う。
 6. `package.json` に `content:check` があれば実行し、エラーを解消する。なければ「未整備」と報告する。
 
